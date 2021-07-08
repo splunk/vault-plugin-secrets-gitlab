@@ -1,0 +1,7 @@
+vault-gitlab-token-plugin
+plugins/
+.vscode/
+dist/
+coverage.*
+coverage_*
+.tools/
