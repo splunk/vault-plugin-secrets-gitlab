@@ -1,0 +1,111 @@
+// Copyright  2021 Masahiro Yoshida
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package gitlabtoken
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/xanzy/go-gitlab"
+)
+
+func TestNewClientFail(t *testing.T) {
+	t.Parallel()
+	t.Run("no config", func(t *testing.T) {
+		c, err := NewClient(nil)
+		assert.Error(t, err, "nil config should thrown an error when retrieving Gitlab client")
+		assert.Nil(t, c, "NewClient should return nil client on error")
+	})
+
+	t.Run("empty config", func(t *testing.T) {
+		config := &ConfigStorageEntry{}
+		c, err := NewClient(config)
+		assert.Error(t, err, "NewClient should return an error if config is missing auth")
+		assert.Nil(t, c, "NewClient should return nil client on error")
+
+	})
+}
+
+func TestValid(t *testing.T) {
+	tests := []struct {
+		name     string
+		client   *gitlabClient
+		asserter assert.BoolAssertionFunc
+	}{
+		{
+			name: "valid",
+			client: &gitlabClient{
+				expiration: time.Now().Add(clientTTL),
+			},
+			asserter: assert.True,
+		},
+		{
+			name: "expired",
+			client: &gitlabClient{
+				expiration: time.Now().Add(-1 * time.Minute),
+			},
+			asserter: assert.False,
+		},
+	}
+
+	for _, test := range tests {
+		test := test // capture range var
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			test.asserter(t, test.client.Valid())
+		})
+	}
+}
+
+type mockGitlabClient struct{}
+
+var _ Client = &mockGitlabClient{}
+
+func (ac *mockGitlabClient) Valid() bool {
+	return true
+}
+
+// func (ac *mockGitlabClient) ListProjectAccessToken(id int) ([]*PAT, error) {
+// 	return nil, nil
+// }
+func (ac *mockGitlabClient) CreateProjectAccessToken(tokenStorage *TokenStorageEntry) (*PAT, error) {
+	return nil, nil
+}
+
+// func (ac *mockGitlabClient) RevokeProjectAccessToken(tokenStorage *TokenStorageEntry) error {
+// 	return nil
+// }
+
+// getAccClient returns the underlying gitlab client for full access to the gitlab API.
+// This is used in integration tests to validate
+func mustGetAccClient(ctx context.Context, t *testing.T, req *logical.Request, b logical.Backend) *gitlab.Client {
+	t.Helper()
+
+	backend, ok := b.(*GitlabBackend)
+	require.True(t, ok, "invalid backend implementation")
+
+	ac, err := backend.getClient(ctx, req.Storage)
+	require.NoError(t, err, "gitlab client error: %s", err)
+
+	// get the actual Gitlab Client
+	acImpl, ok := ac.(*gitlabClient)
+	require.True(t, ok, "invalid gitlab client implementation")
+
+	return acImpl.client
+}

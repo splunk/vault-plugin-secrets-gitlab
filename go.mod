@@ -1,0 +1,11 @@
+module gitlab.com/m0rosan/vault-plugin-token-gitlab
+
+go 1.16
+
+require (
+	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/vault/api v1.1.0
+	github.com/hashicorp/vault/sdk v0.2.0
+	github.com/stretchr/testify v1.7.0
+	github.com/xanzy/go-gitlab v0.50.1
+)
