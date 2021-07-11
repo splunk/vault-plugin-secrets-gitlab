@@ -1,4 +1,4 @@
-module gitlab.com/m0rosan/vault-plugin-token-gitlab
+module gitlab.com/m0rosan/vault-plugin-secrets-gitlab
 
 go 1.16
 

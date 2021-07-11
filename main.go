@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/vault/api"
 
 	"github.com/hashicorp/vault/sdk/plugin"
-	gitlabtoken "gitlab.com/m0rosan/vault-plugin-token-gitlab/plugin"
+	gitlabtoken "gitlab.com/m0rosan/vault-plugin-secrets-gitlab/plugin"
 )
 
 var (
@@ -38,7 +38,7 @@ func main() {
 	tlsConfig := apiClientMeta.GetTLSConfig()
 	tlsProviderFunc := api.VaultPluginTLSProvider(tlsConfig)
 
-	log.Printf("vault-gitlab-secrets-plugin %s, commit %s, built at %s\n", version, commit, date)
+	log.Printf("vault-plugin-secrets-gitlab %s, commit %s, built at %s\n", version, commit, date)
 	if err := plugin.Serve(&plugin.ServeOpts{
 		BackendFactoryFunc: gitlabtoken.Factory,
 		TLSProviderFunc:    tlsProviderFunc,

@@ -1,4 +1,4 @@
-project_name: vault-gitlab-token-plugin
+project_name: vault-plugin-secrets-gitlab
 release:
   disable: true
 before:

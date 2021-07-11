@@ -1,4 +1,4 @@
-vault-gitlab-token-plugin
+vault-plugin-secrets-gitlab
 plugins/
 .vscode/
 dist/
