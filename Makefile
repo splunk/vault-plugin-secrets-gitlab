@@ -1,4 +1,4 @@
-NAME?=vault-gitlab-token-plugin
+NAME?=vault-plugin-secrets-gitlab
 
 .DEFAULT_GOAL := all
 all: get build lint test 
@@ -22,7 +22,7 @@ lint: .tools/golangci-lint
 test:
 	go test -short -parallel=10 -v -covermode=count -coverprofile=coverage_unit.out ./... $(TESTARGS)
 
-# acceptance-test: tools
+# acc-test: tools
 # 	@(eval $$(./scripts/init_dev.sh) && go test -parallel=10 -v -covermode=count -coverprofile=coverage_artacc.out ./... -run=TestAcc)
 
 report: .tools/gocover-cobertura .tools/gocovmerge

@@ -9,7 +9,7 @@ export VAULT_ADDR="http://localhost:8200"
 export VAULT_TOKEN=root
 
 setup_vault() {
-  plugin=vault-gitlab-token-plugin
+  plugin=vault-plugin-secrets-gitlab
   existing=$(vault secrets list -format json | jq -r '."gitlab/"')
   if [ "$existing" == "null" ]; then
 

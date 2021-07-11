@@ -16,6 +16,7 @@ package gitlabtoken
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -40,7 +41,7 @@ var configSchema = map[string]*framework.FieldSchema{
 	},
 	"max_token_lifetime": {
 		Type:        framework.TypeDurationSecond,
-		Description: `Maximum lifetime in hours a generated token will be valid for. If <= 0, will use system default(0, never expire)`,
+		Description: `Maximum lifetime a generated token will be valid for. If <= 0, will use system default(0, never expire)`,
 		Default:     0,
 	},
 	// "max_ttl": {
@@ -53,7 +54,7 @@ var configSchema = map[string]*framework.FieldSchema{
 func configDetail(config *ConfigStorageEntry) map[string]interface{} {
 	return map[string]interface{}{
 		"base_url":           config.BaseURL,
-		"max_token_lifetime": config.MaxTokenLifetime.Hours(),
+		"max_token_lifetime": fmt.Sprintf("%fh", config.MaxTokenLifetime.Hours()),
 	}
 }
 

@@ -42,7 +42,7 @@ func TestConfig(t *testing.T) {
 
 		expected := map[string]interface{}{
 			"base_url":           "https://my.gitlab.com",
-			"max_token_lifetime": float64(0),
+			"max_token_lifetime": fmt.Sprintf("%fh", float64(0)),
 		}
 
 		testConfigRead(t, backend, reqStorage, expected)
@@ -71,7 +71,7 @@ func TestConfig(t *testing.T) {
 
 		expected := map[string]interface{}{
 			"base_url":           "https://my.gitlab.com",
-			"max_token_lifetime": float64(30 * 24),
+			"max_token_lifetime": fmt.Sprintf("%fh", float64(30*24)),
 		}
 
 		testConfigRead(t, backend, reqStorage, expected)
@@ -80,7 +80,7 @@ func TestConfig(t *testing.T) {
 		conf["max_token_lifetime"] = fmt.Sprintf("%ds", 7*24*3600)
 		testConfigUpdate(t, backend, reqStorage, conf)
 
-		expected["max_token_lifetime"] = float64(7 * 24)
+		expected["max_token_lifetime"] = fmt.Sprintf("%fh", float64(7*24))
 		testConfigRead(t, backend, reqStorage, expected)
 
 	})
@@ -97,10 +97,8 @@ func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[
 	require.NoError(t, err)
 	require.False(t, resp.IsError())
 
-	if warnings != nil {
-		for _, warning := range warnings {
-			require.Contains(t, resp.Warnings, warning)
-		}
+	for _, warning := range warnings {
+		require.Contains(t, resp.Warnings, warning)
 	}
 }
 

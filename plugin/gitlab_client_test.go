@@ -15,14 +15,10 @@
 package gitlabtoken
 
 import (
-	"context"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/xanzy/go-gitlab"
 )
 
 func TestNewClientFail(t *testing.T) {
@@ -91,21 +87,3 @@ func (ac *mockGitlabClient) CreateProjectAccessToken(tokenStorage *TokenStorageE
 // func (ac *mockGitlabClient) RevokeProjectAccessToken(tokenStorage *TokenStorageEntry) error {
 // 	return nil
 // }
-
-// getAccClient returns the underlying gitlab client for full access to the gitlab API.
-// This is used in integration tests to validate
-func mustGetAccClient(ctx context.Context, t *testing.T, req *logical.Request, b logical.Backend) *gitlab.Client {
-	t.Helper()
-
-	backend, ok := b.(*GitlabBackend)
-	require.True(t, ok, "invalid backend implementation")
-
-	ac, err := backend.getClient(ctx, req.Storage)
-	require.NoError(t, err, "gitlab client error: %s", err)
-
-	// get the actual Gitlab Client
-	acImpl, ok := ac.(*gitlabClient)
-	require.True(t, ok, "invalid gitlab client implementation")
-
-	return acImpl.client
-}
