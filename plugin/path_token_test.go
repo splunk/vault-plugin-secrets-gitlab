@@ -16,14 +16,16 @@ package gitlabtoken
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccAccessTokensPositive(t *testing.T) {
+func TestAccToken(t *testing.T) {
 	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping integration test (short)")
@@ -46,6 +48,26 @@ func TestAccAccessTokensPositive(t *testing.T) {
 
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
+		assert.Empty(t, resp.Data["expires_at"], "default is never(nil) for expires_at")
+	})
+
+	t.Run("successfully create with expiration", func(t *testing.T) {
+		t.Parallel()
+
+		e := time.Now().Add(time.Hour * 24)
+		d := map[string]interface{}{
+			"id":         ID,
+			"name":       "vault-test-expires",
+			"scopes":     []string{"read_api"},
+			"expires_at": e.Unix(),
+		}
+		resp, err := testIssueToken(req, backend, t, ID, d)
+		require.NoError(t, err)
+		require.False(t, resp.IsError())
+
+		assert.NotEmpty(t, resp.Data["token"], "no token returned")
+		assert.NotEmpty(t, resp.Data["id"], "no id returned")
+		assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
 
 	})
 
@@ -61,7 +83,29 @@ func TestAccAccessTokensPositive(t *testing.T) {
 		require.Contains(t, resp.Data["error"], "id is empty or invalid")
 		require.Contains(t, resp.Data["error"], "name is empty")
 		require.Contains(t, resp.Data["error"], "scopes are empty")
+	})
 
+	t.Run("exceeding max token lifetime", func(t *testing.T) {
+		t.Parallel()
+
+		conf := map[string]interface{}{
+			"max_token_lifetime": fmt.Sprintf("%dh", 7*24), // 7 days
+		}
+
+		testConfigUpdate(t, backend, req.Storage, conf)
+
+		e := time.Now().Add(time.Hour * 14 * 24)
+		d := map[string]interface{}{
+			"id":         ID,
+			"name":       "vault-test-exceeding-lifetime",
+			"scopes":     []string{"read_api"},
+			"expires_at": e.Unix(),
+		}
+		resp, err := testIssueToken(req, backend, t, ID, d)
+		require.NoError(t, err)
+		require.True(t, resp.IsError())
+
+		require.Contains(t, resp.Error(), "exceeds configured maximum token lifetime")
 	})
 
 }

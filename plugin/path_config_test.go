@@ -15,6 +15,7 @@ package gitlabtoken
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
@@ -37,10 +38,11 @@ func TestConfig(t *testing.T) {
 			"token":    "mytoken",
 		}
 
-		testConfigUpdate(t, backend, reqStorage, conf)
+		testConfigUpdate(t, backend, reqStorage, conf, NoMaxTokenLifetimeWarning)
 
 		expected := map[string]interface{}{
-			"base_url": "https://my.gitlab.com",
+			"base_url":           "https://my.gitlab.com",
+			"max_token_lifetime": float64(0),
 		}
 
 		testConfigRead(t, backend, reqStorage, expected)
@@ -50,11 +52,41 @@ func TestConfig(t *testing.T) {
 
 		expected["base_url"] = "https://another.gitlab.com"
 		testConfigRead(t, backend, reqStorage, expected)
+	})
+
+	t.Run("token lifetime", func(t *testing.T) {
+		t.Parallel()
+
+		backend, reqStorage := getTestBackend(t, true)
+
+		testConfigRead(t, backend, reqStorage, nil)
+
+		conf := map[string]interface{}{
+			"base_url":           "https://my.gitlab.com",
+			"token":              "mytoken",
+			"max_token_lifetime": fmt.Sprintf("%dh", 30*24),
+		}
+
+		testConfigUpdate(t, backend, reqStorage, conf)
+
+		expected := map[string]interface{}{
+			"base_url":           "https://my.gitlab.com",
+			"max_token_lifetime": float64(30 * 24),
+		}
+
+		testConfigRead(t, backend, reqStorage, expected)
+
+		// Try seconds
+		conf["max_token_lifetime"] = fmt.Sprintf("%ds", 7*24*3600)
+		testConfigUpdate(t, backend, reqStorage, conf)
+
+		expected["max_token_lifetime"] = float64(7 * 24)
+		testConfigRead(t, backend, reqStorage, expected)
 
 	})
 }
 
-func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[string]interface{}) {
+func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[string]interface{}, warnings ...string) {
 	t.Helper()
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.UpdateOperation,
@@ -64,6 +96,12 @@ func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[
 	})
 	require.NoError(t, err)
 	require.False(t, resp.IsError())
+
+	if warnings != nil {
+		for _, warning := range warnings {
+			require.Contains(t, resp.Warnings, warning)
+		}
+	}
 }
 
 func testConfigRead(t *testing.T, b logical.Backend, s logical.Storage, expected map[string]interface{}) {
