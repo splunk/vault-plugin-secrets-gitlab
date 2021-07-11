@@ -3,6 +3,7 @@
 This is a backend pluing to be used with Vault. This plugin generates [Gitlab Project Access Tokens][pat]
 
 - [Requirements](#requirements)
+- [Design Principles](#design-principles)
 - [Contribution](#contribution)
 - [License](#license)
 
@@ -13,6 +14,12 @@ This is a backend pluing to be used with Vault. This plugin generates [Gitlab Pr
 - a token of a user with maintainer or higher permission in a project
 
 - Lifting API rate limit for the user whose token will be used in this plugin to generate/revoke project access tokens. Admin of self-hosted can check [this doc][lift rate limit] to allow specific users to bypass authenticated request rate limiting. For SaaS Gitlab, I have not confirmed how to lift API limit yet.
+
+## Design Principles
+
+The Gitlab Vault secrets plugin dynamically generates gitlab project access token based on passed parameters. This enables users to gain access to Gitlab projects without needing to create or manage project access tokens manually.
+
+You can find [detail design principles](docs/design-principles.md)
 
 ## Contribution
 
