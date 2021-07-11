@@ -16,19 +16,22 @@ package gitlabtoken
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 )
 
 type TokenStorageEntry struct {
 	// `json:"" structs:"" mapstructure:""`
-	ID     int      `json:"id" structs:"id" mapstructure:"id"`
-	Name   string   `json:"name" structs:"name" mapstructure:"name"`
-	Scopes []string `json:"scopes" structs:"scopes" mapstructure:"scopes"`
-	// AccessLevel int `json:"access_level" structs:"access_level" mapstructure:"access_level"`
+	ID        int        `json:"id" structs:"id" mapstructure:"id"`
+	Name      string     `json:"name" structs:"name" mapstructure:"name"`
+	Scopes    []string   `json:"scopes" structs:"scopes" mapstructure:"scopes"`
+	ExpiresAt *time.Time `json:"expires_at" structs:"expires_at" mapstructure:"expires_at,omitempty"`
+	// AccessLevel int `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
 }
 
-func (tokenStorage TokenStorageEntry) assertValid() error {
+func (tokenStorage TokenStorageEntry) assertValid(maxTokenLifetime time.Duration) error {
 	var err *multierror.Error
 	if tokenStorage.ID <= 0 {
 		err = multierror.Append(err, errors.New("id is empty or invalid"))
@@ -40,6 +43,15 @@ func (tokenStorage TokenStorageEntry) assertValid() error {
 		err = multierror.Append(err, errors.New("scopes are empty"))
 	} else if e := validateScopes(tokenStorage.Scopes); e != nil {
 		err = multierror.Append(err, e)
+	}
+
+	if maxTokenLifetime > time.Duration(0) {
+		maxExpiresAt := time.Now().UTC().Add(maxTokenLifetime)
+		if maxExpiresAt.Before(*tokenStorage.ExpiresAt) {
+			errMsg := fmt.Sprintf("Requested expires_at '%v' exceeds configured maximum token lifetime of '%v'. Expires at or before '%v'",
+				*tokenStorage.ExpiresAt, maxTokenLifetime, maxExpiresAt)
+			err = multierror.Append(err, errors.New(errMsg))
+		}
 	}
 
 	return err.ErrorOrNil()

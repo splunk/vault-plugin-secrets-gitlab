@@ -48,7 +48,7 @@ func (b *GitlabBackend) getClient(ctx context.Context, s logical.Storage) (Clien
 		return b.client, nil
 	}
 
-	config, err := b.getConfig(ctx, s)
+	config, err := getConfig(ctx, s)
 	if err != nil {
 		return nil, err
 	}
