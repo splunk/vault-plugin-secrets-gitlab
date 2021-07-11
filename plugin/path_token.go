@@ -16,6 +16,7 @@ package gitlabtoken
 
 import (
 	"context"
+	"time"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
@@ -30,11 +31,15 @@ var createAccessTokenSchema = map[string]*framework.FieldSchema{
 	},
 	"name": {
 		Type:        framework.TypeString,
-		Description: "The name of the role to be created",
+		Description: "The name of the project access token",
 	},
 	"scopes": {
 		Type:        framework.TypeCommaStringSlice,
-		Description: "Scopes of project access token",
+		Description: "List of scopes",
+	},
+	"expires_at": {
+		Type:        framework.TypeTime,
+		Description: "The token expires at midnight UTC on that date",
 	},
 	// Not valid until gitlab 14.1
 	// "access_level": {
@@ -46,12 +51,16 @@ var createAccessTokenSchema = map[string]*framework.FieldSchema{
 
 func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	tokenDetails := func(pat *PAT) map[string]interface{} {
-		return map[string]interface{}{
+		d := map[string]interface{}{
 			"token":  pat.Token,
 			"id":     pat.ID,
 			"name":   pat.Name,
 			"scopes": pat.Scopes,
 		}
+		if pat.ExpiresAt != nil {
+			d["expires_at"] = time.Time(*pat.ExpiresAt)
+		}
+		return d
 	}
 
 	gc, err := b.getClient(ctx, req.Storage)
@@ -70,11 +79,18 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 	if scopesRaw, ok := data.GetOk("scopes"); ok {
 		tokenStorage.Scopes = scopesRaw.([]string)
 	}
+	if expiresAtRaw, ok := data.GetOk("expires_at"); ok {
+		t := expiresAtRaw.(time.Time)
+		tokenStorage.ExpiresAt = &t
+	}
 	// if accessLevelRaw, ok := data.GetOk("access_level"); ok {
 	// 	tokenStorage.AccessLevel = accessLevelRaw.(string)
 	// }
-
-	err = tokenStorage.assertValid()
+	config, err := getConfig(ctx, req.Storage)
+	if err != nil {
+		return nil, err
+	}
+	err = tokenStorage.assertValid(config.MaxTokenLifetime)
 	if err != nil {
 		return logical.ErrorResponse("Failed to validate - " + err.Error()), nil
 	}
