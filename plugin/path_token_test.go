@@ -89,7 +89,7 @@ func TestAccToken(t *testing.T) {
 		t.Parallel()
 
 		conf := map[string]interface{}{
-			"max_token_lifetime": fmt.Sprintf("%dh", 7*24), // 7 days
+			"max_ttl": fmt.Sprintf("%dh", 7*24), // 7 days
 		}
 
 		testConfigUpdate(t, backend, req.Storage, conf)

@@ -16,7 +16,6 @@ package gitlabtoken
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -24,7 +23,8 @@ import (
 )
 
 const (
-	NoMaxTokenLifetimeWarning = "Max token lifetime is not set. Token can be generated with expiration 'never'"
+	LT24HourMaxTTLWarning = "max_ttl is set with less than 24 hours. With current token expiry limitation, this max_ttl is ignored"
+	NoMaxTTLWarning       = "max_ttl is not set. Token can be generated with expiration 'never'"
 )
 
 // schema for the configuring Gitlab token plugin, this will map the fields coming in from the
@@ -39,22 +39,17 @@ var configSchema = map[string]*framework.FieldSchema{
 		Type:        framework.TypeString,
 		Description: `gitlab token that has permissions to generate project access tokens`,
 	},
-	"max_token_lifetime": {
+	"max_ttl": {
 		Type:        framework.TypeDurationSecond,
 		Description: `Maximum lifetime a generated token will be valid for. If <= 0, will use system default(0, never expire)`,
 		Default:     0,
 	},
-	// "max_ttl": {
-	// 	Type:        framework.TypeDurationSecond,
-	// 	Description: "Maximum time a token generated will be valid for. If <= 0, will use system default(3600).",
-	// 	Default:     3600,
-	// },
 }
 
 func configDetail(config *ConfigStorageEntry) map[string]interface{} {
 	return map[string]interface{}{
-		"base_url":           config.BaseURL,
-		"max_token_lifetime": fmt.Sprintf("%fh", config.MaxTokenLifetime.Hours()),
+		"base_url": config.BaseURL,
+		"max_ttl":  int64(config.MaxTTL / time.Second),
 	}
 }
 
@@ -94,13 +89,19 @@ func (b *GitlabBackend) pathConfigWrite(ctx context.Context, req *logical.Reques
 		config.Token = token.(string)
 	}
 
-	maxTokenLifetimeRaw, ok := data.GetOk("max_token_lifetime")
-	if ok && maxTokenLifetimeRaw.(int) > 0 {
-		config.MaxTokenLifetime = time.Duration(maxTokenLifetimeRaw.(int)) * time.Second
+	maxTTLRaw, ok := data.GetOk("max_ttl")
+	if ok && maxTTLRaw.(int) > 0 {
+		// Until Gitlab implements granular token expiry.
+		// bounce anything less than 24 hours
+		if maxTTLRaw.(int) < (24 * 3600) {
+			warnings = append(warnings, LT24HourMaxTTLWarning)
+		} else {
+			config.MaxTTL = time.Duration(maxTTLRaw.(int)) * time.Second
+		}
 	}
 
-	if config.MaxTokenLifetime == 0 {
-		warnings = append(warnings, NoMaxTokenLifetimeWarning)
+	if config.MaxTTL == 0 {
+		warnings = append(warnings, NoMaxTTLWarning)
 	}
 
 	// maxTTLRaw, ok := data.GetOk("max_ttl")
@@ -165,6 +166,7 @@ var configExamples = []framework.RequestExample{
 		Data: map[string]interface{}{
 			"base_url": "https://my.gitlab.com",
 			"token":    "MyPersonalAccessToken",
+			"max_ttl":  "168h",
 		},
 	},
 }

@@ -31,7 +31,7 @@ type TokenStorageEntry struct {
 	// AccessLevel int `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
 }
 
-func (tokenStorage TokenStorageEntry) assertValid(maxTokenLifetime time.Duration) error {
+func (tokenStorage TokenStorageEntry) assertValid(maxTTL time.Duration) error {
 	var err *multierror.Error
 	if tokenStorage.ID <= 0 {
 		err = multierror.Append(err, errors.New("id is empty or invalid"))
@@ -45,11 +45,11 @@ func (tokenStorage TokenStorageEntry) assertValid(maxTokenLifetime time.Duration
 		err = multierror.Append(err, e)
 	}
 
-	if maxTokenLifetime > time.Duration(0) {
-		maxExpiresAt := time.Now().UTC().Add(maxTokenLifetime)
+	if maxTTL > time.Duration(0) {
+		maxExpiresAt := time.Now().UTC().Add(maxTTL)
 		if maxExpiresAt.Before(*tokenStorage.ExpiresAt) {
-			errMsg := fmt.Sprintf("Requested expires_at '%v' exceeds configured maximum token lifetime of '%v'. Expires at or before '%v'",
-				*tokenStorage.ExpiresAt, maxTokenLifetime, maxExpiresAt)
+			errMsg := fmt.Sprintf("Requested expires_at '%v' exceeds configured maximum ttl of '%v's. Expires at or before '%v'",
+				*tokenStorage.ExpiresAt, int64(maxTTL/time.Second), maxExpiresAt)
 			err = multierror.Append(err, errors.New(errMsg))
 		}
 	}
