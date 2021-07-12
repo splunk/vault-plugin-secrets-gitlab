@@ -1,0 +1,78 @@
+image: registry.gitlab.com/m0rosan/ci-images:golang-1.16-buster
+
+stages:
+  - test
+  # - acceptance-test
+  - build
+  - scan
+  - tag
+  - release
+
+variables:
+  GOPATH: $CI_PROJECT_DIR/.go
+
+.go-cache:
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+     - .go/pkg/mod/
+     - .tools
+
+.artifacts: &artifacts
+  artifacts:
+    paths:
+      - coverage_*.out
+
+test:
+  stage: test
+  extends: .go-cache
+  script: 
+    - make lint test
+  <<: *artifacts
+
+build:
+  stage: build
+  extends: .go-cache
+  script: 
+    - goreleaser --snapshot
+  only:
+    - branches
+
+# acceptance:
+#   stage: acceptance-test
+#   extends: .go-cache
+#   script: make acc-test
+#   <<: *artifacts
+
+coverage:
+  stage: scan
+  needs:
+    - test
+    # - acceptance
+  coverage: '/total:.*\d+\.\d+/'
+  script: make report
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+
+tag:
+  stage: tag
+  script:
+    - gitversion bump auto
+    - eval $(ssh-agent -s)
+    - ./scripts/tag-push.sh
+  only:
+    - main
+
+release:
+  stage: release
+  image:
+    name: goreleaser/goreleaser
+    entrypoint: ['']
+  only:
+    - tags
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - goreleaser release --rm-dist
