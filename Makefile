@@ -12,9 +12,6 @@ build:
 build-linux:
 	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o plugins/$(NAME)
 
-# publish:
-# 	$(eval VERSION=$(shell gitversion show))
-# 	./scripts/publish.sh linux amd64 $(VERSION)
 
 lint: .tools/golangci-lint
 	.tools/golangci-lint run

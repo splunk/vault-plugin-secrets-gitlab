@@ -1,6 +1,8 @@
 project_name: vault-plugin-secrets-gitlab
 release:
-  disable: true
+  gitlab:
+    owner: m0rosan
+    name: vault-plugin-secrets-gitlab
 before:
   hooks:
     - go mod download
