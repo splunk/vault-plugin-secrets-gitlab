@@ -30,6 +30,11 @@ test:
   script: 
     - make lint test
   <<: *artifacts
+  only:
+    - branches
+    - main
+  except:
+    - tags
 
 build:
   stage: build
@@ -38,6 +43,9 @@ build:
     - goreleaser --snapshot
   only:
     - branches
+  except:
+    - main
+    - tags
 
 # acceptance:
 #   stage: acceptance-test
@@ -55,6 +63,11 @@ coverage:
   artifacts:
     reports:
       cobertura: coverage.xml
+  only:
+    - branches
+    - main
+  except:
+    - tags 
 
 tag:
   stage: tag
