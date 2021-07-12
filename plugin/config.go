@@ -23,10 +23,9 @@ import (
 
 // ConfigStorageEntry structure represents the config as it is stored within vault
 type ConfigStorageEntry struct {
-	BaseURL          string        `json:"base_url" structs:"base_url" mapstructure:"base_url"`
-	Token            string        `json:"token" structs:"token" mapstructure:"token"`
-	MaxTokenLifetime time.Duration `json:"max_token_lifetime" structs:"max_token_lifetime" mapstructure:"max_token_lifetime"`
-	// MaxTTL        time.Duration `json:"max_ttl" structs:"max_ttl" mapstructure:"max_ttl"`
+	BaseURL string        `json:"base_url" structs:"base_url" mapstructure:"base_url"`
+	Token   string        `json:"token" structs:"token" mapstructure:"token"`
+	MaxTTL  time.Duration `json:"max_ttl" structs:"max_ttl" mapstructure:"max_ttl"`
 }
 
 func getConfig(ctx context.Context, s logical.Storage) (*ConfigStorageEntry, error) {

@@ -38,11 +38,11 @@ func TestConfig(t *testing.T) {
 			"token":    "mytoken",
 		}
 
-		testConfigUpdate(t, backend, reqStorage, conf, NoMaxTokenLifetimeWarning)
+		testConfigUpdate(t, backend, reqStorage, conf, NoMaxTTLWarning)
 
 		expected := map[string]interface{}{
-			"base_url":           "https://my.gitlab.com",
-			"max_token_lifetime": fmt.Sprintf("%fh", float64(0)),
+			"base_url": "https://my.gitlab.com",
+			"max_ttl":  int64(0),
 		}
 
 		testConfigRead(t, backend, reqStorage, expected)
@@ -54,7 +54,7 @@ func TestConfig(t *testing.T) {
 		testConfigRead(t, backend, reqStorage, expected)
 	})
 
-	t.Run("token lifetime", func(t *testing.T) {
+	t.Run("max ttl", func(t *testing.T) {
 		t.Parallel()
 
 		backend, reqStorage := getTestBackend(t, true)
@@ -62,27 +62,32 @@ func TestConfig(t *testing.T) {
 		testConfigRead(t, backend, reqStorage, nil)
 
 		conf := map[string]interface{}{
-			"base_url":           "https://my.gitlab.com",
-			"token":              "mytoken",
-			"max_token_lifetime": fmt.Sprintf("%dh", 30*24),
+			"base_url": "https://my.gitlab.com",
+			"token":    "mytoken",
+			"max_ttl":  fmt.Sprintf("%dh", 30*24),
 		}
 
 		testConfigUpdate(t, backend, reqStorage, conf)
 
 		expected := map[string]interface{}{
-			"base_url":           "https://my.gitlab.com",
-			"max_token_lifetime": fmt.Sprintf("%fh", float64(30*24)),
+			"base_url": "https://my.gitlab.com",
+			"max_ttl":  int64(30 * 24 * 3600),
 		}
 
 		testConfigRead(t, backend, reqStorage, expected)
 
 		// Try seconds
-		conf["max_token_lifetime"] = fmt.Sprintf("%ds", 7*24*3600)
+		conf["max_ttl"] = fmt.Sprintf("%ds", 7*24*3600)
 		testConfigUpdate(t, backend, reqStorage, conf)
 
-		expected["max_token_lifetime"] = fmt.Sprintf("%fh", float64(7*24))
+		expected["max_ttl"] = int64(7 * 24 * 3600)
 		testConfigRead(t, backend, reqStorage, expected)
 
+		// Try less than 24 hours
+		conf["max_ttl"] = fmt.Sprintf("%ds", 12*3600)
+		testConfigUpdate(t, backend, reqStorage, conf, LT24HourMaxTTLWarning)
+
+		testConfigRead(t, backend, reqStorage, expected)
 	})
 }
 
@@ -98,7 +103,8 @@ func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[
 	require.False(t, resp.IsError())
 
 	for _, warning := range warnings {
-		require.Contains(t, resp.Warnings, warning)
+		require.Contains(t, resp.Warnings, warning, "it should expect a warning",
+			"expected_warning", warning, "actual_warnings", resp.Warnings)
 	}
 }
 

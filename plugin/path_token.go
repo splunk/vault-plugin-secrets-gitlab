@@ -90,7 +90,7 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 	if err != nil {
 		return nil, err
 	}
-	err = tokenStorage.assertValid(config.MaxTokenLifetime)
+	err = tokenStorage.assertValid(config.MaxTTL)
 	if err != nil {
 		return logical.ErrorResponse("Failed to validate - " + err.Error()), nil
 	}
