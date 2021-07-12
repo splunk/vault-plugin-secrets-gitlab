@@ -78,7 +78,7 @@ make vault-only
 
 # In New Terminal
 export VAULT_ADDR=http://localhost:8200
-export GITLAB_URL="https://artifactory.example.com"
+export GITLAB_URL="https://gitlab.example.com"
 export GITLAB_TOKEN=TOKEN
 
 
