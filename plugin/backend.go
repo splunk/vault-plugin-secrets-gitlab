@@ -20,15 +20,17 @@ import (
 	"sync"
 
 	"github.com/hashicorp/vault/sdk/framework"
+	"github.com/hashicorp/vault/sdk/helper/locksutil"
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
 // GitlabBackend is the backend for Gitlab plugin
 type GitlabBackend struct {
 	*framework.Backend
-	view   logical.Storage
-	client Client
-	lock   sync.RWMutex
+	view      logical.Storage
+	client    Client
+	lock      sync.RWMutex
+	roleLocks []*locksutil.LockEntry
 }
 
 func (b *GitlabBackend) getClient(ctx context.Context, s logical.Storage) (Client, error) {
@@ -86,7 +88,8 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 // Backend export the function to create backend and configure
 func Backend(conf *logical.BackendConfig) *GitlabBackend {
 	backend := &GitlabBackend{
-		view: conf.StorageView,
+		view:      conf.StorageView,
+		roleLocks: locksutil.CreateLocks(),
 	}
 
 	backend.Backend = &framework.Backend{
@@ -95,6 +98,9 @@ func Backend(conf *logical.BackendConfig) *GitlabBackend {
 		Paths: framework.PathAppend(
 			pathConfig(backend),
 			pathToken(backend),
+			pathRole(backend),
+			pathRoleList(backend),
+			pathRoleToken(backend),
 		),
 		Invalidate: backend.invalidate,
 	}

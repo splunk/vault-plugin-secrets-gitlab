@@ -21,6 +21,7 @@ type PAT = gitlab.ProjectAccessToken
 const (
 	pathPatternConfig = "config"
 	pathPatternToken  = "token"
+	pathPatternRoles  = "roles"
 
 	// accessLevelGuest      = 10
 	// accessLevelReporter   = 20

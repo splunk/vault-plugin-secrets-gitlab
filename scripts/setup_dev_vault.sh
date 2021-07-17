@@ -15,7 +15,8 @@ setup_vault() {
 
     # in CI, current container bind mount is private, preventing nested bind mounts
     # instead, copy plugin in to vault container and reload
-    if ! vault plugin list secret | grep -q gitlab; then
+    vault plugin list secret | grep -q gitlab
+    if [ $? -ne 0 ]; then
       echo "Plugin missing from dev plugin dir /vault/plugins... registering manually."
       sha=$(shasum -a 256 plugins/$plugin | cut -d' ' -f1)
       # if plugin is missing, it is assumed this is a CI environment and vault is running in a container

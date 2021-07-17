@@ -16,16 +16,20 @@ package gitlabtoken
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-const (
-	LT24HourMaxTTLWarning = "max_ttl is set with less than 24 hours. With current token expiry limitation, this max_ttl is ignored"
-	NoMaxTTLWarning       = "max_ttl is not set. Token can be generated with expiration 'never'"
-)
+func NoTTLWarning(s string) string {
+	return fmt.Sprintf("%s is not set. Token can be generated with expiration 'never'", s)
+}
+
+func LT24HourTTLWarning(s string) string {
+	return fmt.Sprintf("%[1]s is set with less than 24 hours. With current token expiry limitation, this %[1]s is ignored", s)
+}
 
 // schema for the configuring Gitlab token plugin, this will map the fields coming in from the
 // vault request field map
@@ -94,14 +98,14 @@ func (b *GitlabBackend) pathConfigWrite(ctx context.Context, req *logical.Reques
 		// Until Gitlab implements granular token expiry.
 		// bounce anything less than 24 hours
 		if maxTTLRaw.(int) < (24 * 3600) {
-			warnings = append(warnings, LT24HourMaxTTLWarning)
+			warnings = append(warnings, LT24HourTTLWarning("max_ttl"))
 		} else {
 			config.MaxTTL = time.Duration(maxTTLRaw.(int)) * time.Second
 		}
 	}
 
 	if config.MaxTTL == 0 {
-		warnings = append(warnings, NoMaxTTLWarning)
+		warnings = append(warnings, NoTTLWarning("max_ttl"))
 	}
 
 	// maxTTLRaw, ok := data.GetOk("max_ttl")

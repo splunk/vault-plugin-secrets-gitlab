@@ -22,9 +22,9 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-// schema for the creation of the role, this will map the fields coming in from the
+// schema for the token, this will map the fields coming in from the
 // vault request field map
-var createAccessTokenSchema = map[string]*framework.FieldSchema{
+var accessTokenSchema = map[string]*framework.FieldSchema{
 	"id": {
 		Type:        framework.TypeInt,
 		Description: "Project ID to create a project access token for",
@@ -49,54 +49,43 @@ var createAccessTokenSchema = map[string]*framework.FieldSchema{
 	// },
 }
 
-func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	tokenDetails := func(pat *PAT) map[string]interface{} {
-		d := map[string]interface{}{
-			"token":  pat.Token,
-			"id":     pat.ID,
-			"name":   pat.Name,
-			"scopes": pat.Scopes,
-		}
-		if pat.ExpiresAt != nil {
-			d["expires_at"] = time.Time(*pat.ExpiresAt)
-		}
-		return d
+func tokenDetails(pat *PAT) map[string]interface{} {
+	d := map[string]interface{}{
+		"token":  pat.Token,
+		"id":     pat.ID,
+		"name":   pat.Name,
+		"scopes": pat.Scopes,
 	}
+	if pat.ExpiresAt != nil {
+		d["expires_at"] = time.Time(*pat.ExpiresAt)
+	}
+	return d
+}
 
+func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	gc, err := b.getClient(ctx, req.Storage)
 	if err != nil {
 		return logical.ErrorResponse("failed to obtain gitlab client - %s", err.Error()), nil
 	}
 
 	var tokenStorage TokenStorageEntry
+	tokenStorage.retrieve(data)
 
-	if idRaw, ok := data.GetOk("id"); ok {
-		tokenStorage.ID = idRaw.(int)
-	}
-	if nameRaw, ok := data.GetOk("name"); ok {
-		tokenStorage.Name = nameRaw.(string)
-	}
-	if scopesRaw, ok := data.GetOk("scopes"); ok {
-		tokenStorage.Scopes = scopesRaw.([]string)
-	}
-	if expiresAtRaw, ok := data.GetOk("expires_at"); ok {
-		t := expiresAtRaw.(time.Time)
-		tokenStorage.ExpiresAt = &t
-	}
-	// if accessLevelRaw, ok := data.GetOk("access_level"); ok {
-	// 	tokenStorage.AccessLevel = accessLevelRaw.(string)
-	// }
 	config, err := getConfig(ctx, req.Storage)
 	if err != nil {
-		return nil, err
+		return logical.ErrorResponse("failed to obtain artifactory config - %s", err.Error()), nil
+	}
+	if config == nil {
+		return logical.ErrorResponse("artifactory backend configuration has not been set up"), nil
 	}
 	err = tokenStorage.assertValid(config.MaxTTL)
 	if err != nil {
 		return logical.ErrorResponse("Failed to validate - " + err.Error()), nil
 	}
 
-	b.Logger().Debug("generating access token", "id", tokenStorage.ID, "name", tokenStorage.Name, "scopes", tokenStorage.Scopes)
-	pat, err := gc.CreateProjectAccessToken(&tokenStorage)
+	b.Logger().Debug("generating access token", "id", tokenStorage.BaseTokenStorage.ID,
+		"name", tokenStorage.BaseTokenStorage.Name, "scopes", tokenStorage.BaseTokenStorage.Scopes)
+	pat, err := gc.CreateProjectAccessToken(&tokenStorage.BaseTokenStorage, tokenStorage.ExpiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
@@ -108,7 +97,7 @@ func pathToken(b *GitlabBackend) []*framework.Path {
 	paths := []*framework.Path{
 		{
 			Pattern: pathPatternToken,
-			Fields:  createAccessTokenSchema,
+			Fields:  accessTokenSchema,
 			Operations: map[logical.Operation]framework.OperationHandler{
 				logical.CreateOperation: &framework.PathOperation{
 
@@ -130,13 +119,13 @@ func pathToken(b *GitlabBackend) []*framework.Path {
 
 const pathTokenHelpSyn = `Generate a project access token for a given project with token name, scopes.`
 const pathTokenHelpDesc = `
-This path allows you to generate a project access token for a given role. You must supply a name, which 
+This path allows you to generate a project access token. You must supply a project id to generate a token for, a name, which 
 will be used as a name field in Gitlab, and scopes for the generated project access token.
 `
 
 var tokenExamples = []framework.RequestExample{
 	{
-		Description: "Create/update backend configuration",
+		Description: "Create a project access token",
 		Data: map[string]interface{}{
 			"id":     1,
 			"name":   "MyProjectAccessToken",

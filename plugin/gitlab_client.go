@@ -27,8 +27,8 @@ const (
 
 type Client interface {
 	// ListProjectAccessToken(int) ([]*PAT, error)
-	CreateProjectAccessToken(*TokenStorageEntry) (*PAT, error)
-	// RevokeProjectAccessToken(*TokenStorageEntry) error
+	CreateProjectAccessToken(*BaseTokenStorageEntry, *time.Time) (*PAT, error)
+	// RevokeProjectAccessToken(*BaseTokenStorageEntry) error
 	Valid() bool
 }
 
@@ -68,13 +68,13 @@ func (gc *gitlabClient) Valid() bool {
 
 // 	return nil, nil
 // }
-func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *TokenStorageEntry) (*PAT, error) {
+func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageEntry, expiresAt *time.Time) (*PAT, error) {
 	opt := gitlab.CreateProjectAccessTokenOptions{
 		Name:   &tokenStorage.Name,
 		Scopes: tokenStorage.Scopes,
 	}
-	if tokenStorage.ExpiresAt != nil {
-		expiration := gitlab.ISOTime(*tokenStorage.ExpiresAt)
+	if expiresAt != nil {
+		expiration := gitlab.ISOTime(*expiresAt)
 		opt.ExpiresAt = &expiration
 	}
 	pat, _, err := gc.client.ProjectAccessTokens.CreateProjectAccessToken(tokenStorage.ID, &opt)
@@ -84,6 +84,6 @@ func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *TokenStorageEntry
 	return pat, nil
 }
 
-// func (gc *gitlabClient) RevokeProjectAccessToken(tokenStorage *TokenStorageEntry) error {
+// func (gc *gitlabClient) RevokeProjectAccessToken(tokenStorage *BaseTokenStorageEntry) error {
 // 	return nil
 // }
