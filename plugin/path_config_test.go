@@ -38,7 +38,7 @@ func TestConfig(t *testing.T) {
 			"token":    "mytoken",
 		}
 
-		testConfigUpdate(t, backend, reqStorage, conf, NoMaxTTLWarning)
+		testConfigUpdate(t, backend, reqStorage, conf, NoTTLWarning("max_ttl"))
 
 		expected := map[string]interface{}{
 			"base_url": "https://my.gitlab.com",
@@ -85,7 +85,7 @@ func TestConfig(t *testing.T) {
 
 		// Try less than 24 hours
 		conf["max_ttl"] = fmt.Sprintf("%ds", 12*3600)
-		testConfigUpdate(t, backend, reqStorage, conf, LT24HourMaxTTLWarning)
+		testConfigUpdate(t, backend, reqStorage, conf, LT24HourTTLWarning("max_ttl"))
 
 		testConfigRead(t, backend, reqStorage, expected)
 	})
