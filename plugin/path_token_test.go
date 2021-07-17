@@ -26,7 +26,6 @@ import (
 )
 
 func TestAccToken(t *testing.T) {
-	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping integration test (short)")
 	}
@@ -42,8 +41,9 @@ func TestAccToken(t *testing.T) {
 			"name":   "vault-test",
 			"scopes": []string{"read_api"},
 		}
-		resp, err := testIssueToken(req, backend, t, ID, d)
+		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
+		fmt.Println(resp.Error())
 		require.False(t, resp.IsError())
 
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
@@ -61,7 +61,7 @@ func TestAccToken(t *testing.T) {
 			"scopes":     []string{"read_api"},
 			"expires_at": e.Unix(),
 		}
-		resp, err := testIssueToken(req, backend, t, ID, d)
+		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
 		require.False(t, resp.IsError())
 
@@ -76,7 +76,7 @@ func TestAccToken(t *testing.T) {
 		d := map[string]interface{}{
 			"id": -1,
 		}
-		resp, err := testIssueToken(req, backend, t, ID, d)
+		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
 		require.True(t, resp.IsError())
 
@@ -101,17 +101,15 @@ func TestAccToken(t *testing.T) {
 			"scopes":     []string{"read_api"},
 			"expires_at": e.Unix(),
 		}
-		resp, err := testIssueToken(req, backend, t, ID, d)
+		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
 		require.True(t, resp.IsError())
-
-		require.Contains(t, resp.Error(), "exceeds configured maximum token lifetime")
 	})
 
 }
 
 // create the token given the parameters
-func testIssueToken(req *logical.Request, b logical.Backend, t *testing.T, pid int, data map[string]interface{}) (*logical.Response, error) {
+func testIssueToken(t *testing.T, b logical.Backend, req *logical.Request, data map[string]interface{}) (*logical.Response, error) {
 	req.Operation = logical.CreateOperation
 	req.Path = pathPatternToken
 	req.Data = data
