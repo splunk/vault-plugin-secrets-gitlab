@@ -199,3 +199,60 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+=======================================================================
+Vault Plugin Secrets for Gitlab:
+
+Vault Plugin Secrets for Gitlab project contains subcomponents with
+separate copyright notices and license terms.  Your use of the source
+code for the these subcomponents is subject to the terms and conditions
+of the following licenses.
+
+========================================================================
+Apache License 2.0
+========================================================================
+The following components are provided under the Apache License 2.0. See project link for details.
+
+   (Apache License 2.0) go-gitlab (https://github.com/xanzy/go-gitlab/blob/master/LICENSE)
+
+========================================================================
+MIT licenses
+========================================================================
+The following components are provided under the MIT License. See project link for details.
+
+   (MIT License) go-glob (https://github.com/ryanuber/go-glob/blob/master/LICENSE)
+   (MIT License) go-homedir (https://github.com/mitchellh/go-homedir/blob/master/LICENSE)
+   (MIT License) mapstructure (https://github.com/mitchellh/mapstructure/blob/master/LICENSE)
+   (MIT License) objx (https://github.com/stretchr/objx/blob/master/LICENSE)
+   (MIT License) testify (https://github.com/stretchr/testify/blob/master/LICENSE)
+
+========================================================================
+BSD 3-Clause licenses
+========================================================================
+The following components are provided under the BSD 3-Clause. See project link for details.
+   
+   (BSD 3-Clause) snappy (https://github.com/golang/snappy/blob/master/LICENSE)
+   (BSD 3-Clause) lz4 (https://github.com/pierrec/lz4/blob/master/LICENSE)
+   (BSD 3-Clause) difflib (https://github.com/pmezard/go-difflib/blob/master/difflib/LICENSE)
+   (BSD 3-Clause) go-querystring (https://github.com/google/go-querystring/blob/master/query/LICENSE)
+
+========================================================================
+MPL-2.0 licenses
+========================================================================
+The following components are provided under the MPL-2.0. See project link for details.
+   
+   (MPL-2.0) go-multierror (https://github.com/hashicorp/go-multierror/blob/master/LICENSE)
+   (MPL-2.0) errwrap (https://github.com/hashicorp/errwrap/blob/master/LICENSE)
+   (MPL-2.0) vault/api	(https://github.com/hashicorp/vault/blob/master/api/LICENSE)
+   (MPL-2.0) go-retryablehttp	(https://github.com/hashicorp/go-retryablehttp/blob/master/LICENSE)
+   (MPL-2.0) vault/sdk/helper	(https://github.com/hashicorp/vault/blob/master/sdk/helper/LICENSE)
+   (MPL-2.0) go-sockaddr	(https://github.com/hashicorp/go-sockaddr/blob/master/LICENSE)
+   (MPL-2.0) go-cleanhttp	(https://github.com/hashicorp/go-cleanhttp/blob/master/LICENSE)
+   (MPL-2.0) go-rootcerts	(https://github.com/hashicorp/go-rootcerts/blob/master/LICENSE)
+   (MPL-2.0) hcl	(https://github.com/hashicorp/hcl/blob/master/LICENSE)
+
+========================================================================
+For the rest:
+========================================================================
+
+   (ISC) spew (https://github.com/davecgh/go-spew/blob/master/spew/LICENSE)
