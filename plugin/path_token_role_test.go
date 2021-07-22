@@ -50,6 +50,8 @@ func TestAccRoleToken(t *testing.T) {
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
 		assert.NotEmpty(t, resp.Data["expires_at"], "default is 1d for expires_at")
+
+		mustRevoke(t, backend, req.Storage, ID, resp.Data["id"].(int))
 	})
 
 	t.Run("non-existing role", func(t *testing.T) {

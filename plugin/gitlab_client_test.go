@@ -84,6 +84,6 @@ func (ac *mockGitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStor
 	return nil, nil
 }
 
-// func (ac *mockGitlabClient) RevokeProjectAccessToken(tokenStorage *BaseTokenStorageEntry) error {
-// 	return nil
-// }
+func (ac *mockGitlabClient) RevokeProjectAccessToken(revokeStorage *RevokeStorageEntry) error {
+	return nil
+}

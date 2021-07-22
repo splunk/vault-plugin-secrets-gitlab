@@ -34,7 +34,6 @@ func TestAccToken(t *testing.T) {
 	ID := envAsInt("GITLAB_PROJECT_ID", 1)
 
 	t.Run("successfully create", func(t *testing.T) {
-		t.Parallel()
 
 		d := map[string]interface{}{
 			"id":     ID,
@@ -43,16 +42,16 @@ func TestAccToken(t *testing.T) {
 		}
 		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
-		fmt.Println(resp.Error())
 		require.False(t, resp.IsError())
 
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
 		assert.Empty(t, resp.Data["expires_at"], "default is never(nil) for expires_at")
+
+		mustRevoke(t, backend, req.Storage, ID, resp.Data["id"].(int))
 	})
 
 	t.Run("successfully create with expiration", func(t *testing.T) {
-		t.Parallel()
 
 		e := time.Now().Add(time.Hour * 24)
 		d := map[string]interface{}{
@@ -69,10 +68,10 @@ func TestAccToken(t *testing.T) {
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
 		assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
 
+		mustRevoke(t, backend, req.Storage, ID, resp.Data["id"].(int))
 	})
 
 	t.Run("validation failure", func(t *testing.T) {
-		t.Parallel()
 		d := map[string]interface{}{
 			"id": -1,
 		}
@@ -86,7 +85,6 @@ func TestAccToken(t *testing.T) {
 	})
 
 	t.Run("exceeding max token lifetime", func(t *testing.T) {
-		t.Parallel()
 
 		conf := map[string]interface{}{
 			"max_ttl": fmt.Sprintf("%dh", 7*24), // 7 days
