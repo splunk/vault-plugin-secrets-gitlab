@@ -101,6 +101,7 @@ func Backend(conf *logical.BackendConfig) *GitlabBackend {
 			pathRole(backend),
 			pathRoleList(backend),
 			pathRoleToken(backend),
+			pathRevoke(backend),
 		),
 		Invalidate: backend.invalidate,
 	}

@@ -28,7 +28,7 @@ const (
 type Client interface {
 	// ListProjectAccessToken(int) ([]*PAT, error)
 	CreateProjectAccessToken(*BaseTokenStorageEntry, *time.Time) (*PAT, error)
-	// RevokeProjectAccessToken(*BaseTokenStorageEntry) error
+	RevokeProjectAccessToken(*RevokeStorageEntry) error
 	Valid() bool
 }
 
@@ -84,6 +84,7 @@ func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageE
 	return pat, nil
 }
 
-// func (gc *gitlabClient) RevokeProjectAccessToken(tokenStorage *BaseTokenStorageEntry) error {
-// 	return nil
-// }
+func (gc *gitlabClient) RevokeProjectAccessToken(revokeStorage *RevokeStorageEntry) error {
+	_, err := gc.client.ProjectAccessTokens.DeleteProjectAccessToken(revokeStorage.ID, revokeStorage.TokenID)
+	return err
+}

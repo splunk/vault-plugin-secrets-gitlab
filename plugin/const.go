@@ -22,6 +22,7 @@ const (
 	pathPatternConfig = "config"
 	pathPatternToken  = "token"
 	pathPatternRoles  = "roles"
+	pathPatternRevoke = "revoke"
 
 	// accessLevelGuest      = 10
 	// accessLevelReporter   = 20

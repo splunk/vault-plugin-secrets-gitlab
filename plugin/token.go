@@ -36,6 +36,12 @@ type BaseTokenStorageEntry struct {
 	// AccessLevel int `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
 }
 
+type RevokeStorageEntry struct {
+	// `json:"" structs:"" mapstructure:""`
+	ID      int `json:"id" structs:"id" mapstructure:"id"`
+	TokenID int `json:"token_id" structs:"token_id" mapstructure:"token_id"`
+}
+
 func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration) error {
 	var err *multierror.Error
 	if e := tokenStorage.BaseTokenStorage.assertValid(); e != nil {
@@ -54,18 +60,30 @@ func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration) error {
 	return err.ErrorOrNil()
 }
 
-func (BaseTokenStorage *BaseTokenStorageEntry) assertValid() error {
+func (baseTokenStorage *BaseTokenStorageEntry) assertValid() error {
 	var err *multierror.Error
-	if BaseTokenStorage.ID <= 0 {
+	if baseTokenStorage.ID <= 0 {
 		err = multierror.Append(err, errors.New("id is empty or invalid"))
 	}
-	if BaseTokenStorage.Name == "" {
+	if baseTokenStorage.Name == "" {
 		err = multierror.Append(err, errors.New("name is empty"))
 	}
-	if len(BaseTokenStorage.Scopes) == 0 {
+	if len(baseTokenStorage.Scopes) == 0 {
 		err = multierror.Append(err, errors.New("scopes are empty"))
-	} else if e := validateScopes(BaseTokenStorage.Scopes); e != nil {
+	} else if e := validateScopes(baseTokenStorage.Scopes); e != nil {
 		err = multierror.Append(err, e)
+	}
+
+	return err.ErrorOrNil()
+}
+
+func (revokeStorage *RevokeStorageEntry) assertValid() error {
+	var err *multierror.Error
+	if revokeStorage.ID <= 0 {
+		err = multierror.Append(err, errors.New("id is empty or invalid"))
+	}
+	if revokeStorage.TokenID <= 0 {
+		err = multierror.Append(err, errors.New("token_id is empty or invalid"))
 	}
 
 	return err.ErrorOrNil()
@@ -92,4 +110,13 @@ func (baseTokenStorage *BaseTokenStorageEntry) retrieve(data *framework.FieldDat
 	// if accessLevelRaw, ok := data.GetOk("access_level"); ok {
 	// 	tokenStorage.AccessLevel = accessLevelRaw.(string)
 	// }
+}
+
+func (revokeStoragge *RevokeStorageEntry) retrieve(data *framework.FieldData) {
+	if idRaw, ok := data.GetOk("id"); ok {
+		revokeStoragge.ID = idRaw.(int)
+	}
+	if tokenIDRaw, ok := data.GetOk("token_id"); ok {
+		revokeStoragge.TokenID = tokenIDRaw.(int)
+	}
 }
