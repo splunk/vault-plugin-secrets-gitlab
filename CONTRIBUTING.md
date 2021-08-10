@@ -4,6 +4,8 @@ Thank you for your interest in contributing to our project! Whether it's a bug r
 
 In addition to this document, please review our [Code of Conduct](CODE_OF_CONDUCT.md). For any code of conduct questions or comments please leave an issue.
 
+If you would like to contribute to this project, see [Contributions to Splunk] for more information and we ask you to sign Contributor License Agreement(CLA).
+
 ## Reporting Bugs/Feature Requests
 
 We welcome you to use the [GitHub issue tracker] to report bugs or suggest features. When filing an issue, please check existing open, or recently closed, issues to make sure somebody else hasn't already reported the issue. Please try to include as much information as you can. Details like these are incredibly useful:
@@ -60,3 +62,4 @@ See the [LICENSE](LICENSE) file for our project's licensing. We will ask you to
 confirm the licensing of your contribution.
 
 [GitHub issue tracker]: https://github.com/splunk/vault-plugin-secrets-gitlab/issues
+[Contributions to Splunk]: https://www.splunk.com/en_us/form/contributions.html
