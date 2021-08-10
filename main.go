@@ -1,4 +1,4 @@
-// Copyright  2021 Masahiro Yoshida
+// Copyright  2021 Splunk Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/vault/api"
 
 	"github.com/hashicorp/vault/sdk/plugin"
-	gitlabtoken "gitlab.com/m0rosan/vault-plugin-secrets-gitlab/plugin"
+	gitlabtoken "github.com/splunk/vault-plugin-secrets-gitlab/plugin"
 )
 
 var (

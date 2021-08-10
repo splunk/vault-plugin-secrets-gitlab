@@ -6,7 +6,7 @@ In addition to this document, please review our [Code of Conduct](CODE_OF_CONDUC
 
 ## Reporting Bugs/Feature Requests
 
-We welcome you to use the [Gitlab issue tracker] to report bugs or suggest features. When filing an issue, please check existing open, or recently closed, issues to make sure somebody else hasn't already reported the issue. Please try to include as much information as you can. Details like these are incredibly useful:
+We welcome you to use the [GitHub issue tracker] to report bugs or suggest features. When filing an issue, please check existing open, or recently closed, issues to make sure somebody else hasn't already reported the issue. Please try to include as much information as you can. Details like these are incredibly useful:
 
 - A reproducible test case or series of steps
 - The version of this plugin
@@ -45,14 +45,12 @@ To send us a merge request, please:
 6. Pay attention to any automated CI failures reported in the merge request, and
    stay involved in the conversation.
 
-GitLab provides additional documentation on [forking a
-project](https://docs.gitlab.com/ee/user/project/repository/forking_workflow.html) and [creating a merge
-request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html).
+GitHub provides additional documentation on [forking a project](https://docs.github.com/en/get-started/quickstart/fork-a-repo) and [creating a pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
 ## Finding contributions to work on
 
 Looking at the existing issues is a great way to find something to contribute
-on. As our projects, by default, use the default GitLab issue labels
+on. As our projects, by default, use the default GitHub issue labels
 (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at
 any 'help wanted' issues is a great place to start.
 
@@ -61,4 +59,4 @@ any 'help wanted' issues is a great place to start.
 See the [LICENSE](LICENSE) file for our project's licensing. We will ask you to
 confirm the licensing of your contribution.
 
-[Gitlab issue tracker]: https://gitlab.com/m0rosan/vault-plugin-secrets-gitlab/-/issues
+[GitHub issue tracker]: https://github.com/splunk/vault-plugin-secrets-gitlab/issues

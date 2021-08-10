@@ -1,4 +1,4 @@
-module gitlab.com/m0rosan/vault-plugin-secrets-gitlab
+module github.com/splunk/vault-plugin-secrets-gitlab
 
 go 1.16
 

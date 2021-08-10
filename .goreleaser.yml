@@ -1,14 +1,14 @@
 project_name: vault-plugin-secrets-gitlab
 release:
   gitlab:
-    owner: m0rosan
+    owner: splunk
     name: vault-plugin-secrets-gitlab
 before:
   hooks:
     - go mod download
 gitlab_urls:
-  api: https://gitlab.com/api/v4/
-  download: https://gitlab.com
+  api: https://github.com/api/v3/
+  download: https://github.com
   # set to true if you use a self-signed certificate
   skip_tls_verify: false
 builds:
