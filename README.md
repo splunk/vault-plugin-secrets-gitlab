@@ -1,5 +1,10 @@
 # Vault Plugin for Gitlab Project Access Token
 
+[![build-status-badge]][actions-page]
+[![go-report-card-badge]][go-report-card]
+[![codecov-badge]][codecov]
+![go-version-badge]
+
 This is a backend pluing to be used with Vault. This plugin generates [Gitlab Project Access Tokens][pat]
 
 - [Requirements](#requirements)
@@ -121,3 +126,10 @@ Please refer [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF
 [vault-plugin-secrets-artifactory]: https://github.com/splunk/vault-plugin-secrets-artifactory
 [vault plugin]:https://www.vaultproject.io/docs/internals/plugins.html
 [vault-getting-started]:https://www.vaultproject.io/intro/getting-started/install.html
+[actions-page]:https://github.com/splunk/vault-plugin-secrets-gitlab/actions
+[build-status-badge]:https://github.com/splunk/vault-plugin-secrets-gitlab/workflows/test.yml/badge.svg
+[codecov]:https://codecov.io/gh/splunk/vault-plugin-secrets-gitlab
+[codecov-badge]:https://codecov.io/gh/splunk/vault-plugin-secrets-gitlab/branch/main/graph/badge.svg
+[go-report-card]:https://goreportcard.com/report/github.com/splunk/vault-plugin-secrets-gitlab
+[go-report-card-badge]:https://goreportcard.com/badge/github.com/splunk/vault-plugin-secrets-gitlab
+[go-version-badge]:https://img.shields.io/github/go-mod/go-version/splunk/vault-plugin-secrets-gitlab
