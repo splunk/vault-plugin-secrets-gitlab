@@ -8,5 +8,5 @@ require (
 	github.com/hashicorp/vault/sdk v0.2.0
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/stretchr/testify v1.7.0
-	github.com/xanzy/go-gitlab v0.50.1
+	github.com/xanzy/go-gitlab v0.50.4
 )
