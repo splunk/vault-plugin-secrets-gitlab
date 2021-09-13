@@ -17,7 +17,8 @@ This is a backend pluing to be used with Vault. This plugin generates [Gitlab Pr
 
 ## Requirements
 
-- Gitlab instance wiht **13.10** or later for API compatibility
+- Gitlab instance with **13.10** or later for API compatibility
+- You need **14.2** or later to have access level
 - Self-managed instances on Free and above. Or, GitLab SaaS Premium and above
 - a token of a user with maintainer or higher permission in a project
 
@@ -55,6 +56,26 @@ id            12345
 name          ci-token
 scopes        [api write_repository]
 token         REDACTED_TOKEN
+
+# create a role
+$ vault write gitlab/roles/ci-role id=1 name=project1-role scopes=read_api,read_repository
+Key           Value
+---           -----
+role_name     ci-role
+id            1
+name          project1-role
+scopes        [read_api read_repository]
+token_ttl     86400s
+
+# generate an ephemeral gitlab token for ci-role
+$ vault write gitlab/token/ci-role
+Key           Value
+---           -----
+id            12346
+name          project1-role
+scopes        [read_api read_repository]
+token         REDACTED_TOKEN
+expires_at    2021-09-13
 ```
 
 ## Design Principles
