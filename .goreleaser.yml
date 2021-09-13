@@ -6,7 +6,7 @@ release:
 before:
   hooks:
     - go mod download
-gitlab_urls:
+github_urls:
   api: https://github.com/api/v3/
   download: https://github.com
   # set to true if you use a self-signed certificate
@@ -19,6 +19,7 @@ builds:
       - darwin
     goarch:
       - amd64
+      - arm64
 archives:
   - replacements:
       darwin: Darwin
