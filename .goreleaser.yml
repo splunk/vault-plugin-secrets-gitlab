@@ -13,7 +13,7 @@ builds:
       - amd64
       - arm64
 archives:
-  - name_template: "{{.ProjectName}}-{{.Os}}-{{.Arch}}"
+  - name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}_{{.Arch}}"
     format: tar.gz
     format_overrides:
       - goos: windows
