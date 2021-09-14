@@ -6,11 +6,6 @@ release:
 before:
   hooks:
     - go mod download
-github_urls:
-  api: https://github.com/api/v3/
-  download: https://github.com
-  # set to true if you use a self-signed certificate
-  skip_tls_verify: false
 builds:
   - env:
       - CGO_ENABLED=0
