@@ -1,8 +1,4 @@
 project_name: vault-plugin-secrets-gitlab
-release:
-  gitlab:
-    owner: splunk
-    name: vault-plugin-secrets-gitlab
 before:
   hooks:
     - go mod download
