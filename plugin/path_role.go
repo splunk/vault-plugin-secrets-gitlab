@@ -47,21 +47,20 @@ var roleSchema = map[string]*framework.FieldSchema{
 		Description: "The TTL of the token",
 		Default:     24 * 3600, // 24 hours, until it hits midnight UTC
 	},
-	// Not valid until gitlab 14.1
-	// "access_level": {
-	// 	Type:        framework.TypeInt,
-	// 	Description: "access level of project access token",
-	//  Default: accessLevelMaintainer,
-	// },
+	"access_level": {
+		Type:        framework.TypeInt,
+		Description: "access level of project access token",
+	},
 }
 
 func roleDetail(role *RoleStorageEntry) map[string]interface{} {
 	return map[string]interface{}{
-		"role_name": role.RoleName,
-		"id":        role.BaseTokenStorage.ID,
-		"name":      role.BaseTokenStorage.Name,
-		"scopes":    role.BaseTokenStorage.Scopes,
-		"token_ttl": int64(role.TokenTTL / time.Second),
+		"role_name":    role.RoleName,
+		"id":           role.BaseTokenStorage.ID,
+		"name":         role.BaseTokenStorage.Name,
+		"scopes":       role.BaseTokenStorage.Scopes,
+		"access_level": role.BaseTokenStorage.AccessLevel,
+		"token_ttl":    int64(role.TokenTTL / time.Second),
 	}
 }
 

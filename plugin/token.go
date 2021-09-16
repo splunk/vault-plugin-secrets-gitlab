@@ -23,6 +23,8 @@ import (
 	"github.com/hashicorp/vault/sdk/framework"
 )
 
+var errInvalidAccessLevel = errors.New("invalid access level")
+
 type TokenStorageEntry struct {
 	BaseTokenStorage BaseTokenStorageEntry
 	ExpiresAt        *time.Time `json:"expires_at" structs:"expires_at" mapstructure:"expires_at,omitempty"`
@@ -30,10 +32,10 @@ type TokenStorageEntry struct {
 
 type BaseTokenStorageEntry struct {
 	// `json:"" structs:"" mapstructure:""`
-	ID     int      `json:"id" structs:"id" mapstructure:"id"`
-	Name   string   `json:"name" structs:"name" mapstructure:"name"`
-	Scopes []string `json:"scopes" structs:"scopes" mapstructure:"scopes"`
-	// AccessLevel int `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
+	ID          int      `json:"id" structs:"id" mapstructure:"id"`
+	Name        string   `json:"name" structs:"name" mapstructure:"name"`
+	Scopes      []string `json:"scopes" structs:"scopes" mapstructure:"scopes"`
+	AccessLevel int      `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
 }
 
 func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration) error {
@@ -54,18 +56,25 @@ func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration) error {
 	return err.ErrorOrNil()
 }
 
-func (BaseTokenStorage *BaseTokenStorageEntry) assertValid() error {
+func (baseTokenStorage *BaseTokenStorageEntry) assertValid() error {
 	var err *multierror.Error
-	if BaseTokenStorage.ID <= 0 {
+	if baseTokenStorage.ID <= 0 {
 		err = multierror.Append(err, errors.New("id is empty or invalid"))
 	}
-	if BaseTokenStorage.Name == "" {
+	if baseTokenStorage.Name == "" {
 		err = multierror.Append(err, errors.New("name is empty"))
 	}
-	if len(BaseTokenStorage.Scopes) == 0 {
+	if len(baseTokenStorage.Scopes) == 0 {
 		err = multierror.Append(err, errors.New("scopes are empty"))
-	} else if e := validateScopes(BaseTokenStorage.Scopes); e != nil {
+	} else if e := validateScopes(baseTokenStorage.Scopes); e != nil {
 		err = multierror.Append(err, e)
+	}
+
+	// check validity of access level. allowed values are 0(zero value), 10, 20, 30 and 40
+	if d := baseTokenStorage.AccessLevel / 10; d > 4 || d < 0 {
+		err = multierror.Append(err, errInvalidAccessLevel)
+	} else if baseTokenStorage.AccessLevel%10 != 0 {
+		err = multierror.Append(err, errInvalidAccessLevel)
 	}
 
 	return err.ErrorOrNil()
@@ -89,7 +98,7 @@ func (baseTokenStorage *BaseTokenStorageEntry) retrieve(data *framework.FieldDat
 	if scopesRaw, ok := data.GetOk("scopes"); ok {
 		baseTokenStorage.Scopes = scopesRaw.([]string)
 	}
-	// if accessLevelRaw, ok := data.GetOk("access_level"); ok {
-	// 	tokenStorage.AccessLevel = accessLevelRaw.(string)
-	// }
+	if accessLevelRaw, ok := data.GetOk("access_level"); ok {
+		baseTokenStorage.AccessLevel = accessLevelRaw.(int)
+	}
 }
