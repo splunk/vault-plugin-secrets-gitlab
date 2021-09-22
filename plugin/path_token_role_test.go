@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xanzy/go-gitlab"
 )
 
 func TestAccRoleToken(t *testing.T) {
@@ -34,8 +35,6 @@ func TestAccRoleToken(t *testing.T) {
 	ID := envAsInt("GITLAB_PROJECT_ID", 1)
 
 	t.Run("successfully create", func(t *testing.T) {
-		t.Parallel()
-
 		data := map[string]interface{}{
 			"id":     ID,
 			"name":   "vault-role-test",
@@ -49,7 +48,32 @@ func TestAccRoleToken(t *testing.T) {
 
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
+		assert.NotEmpty(t, resp.Data["access_level"], "no access_level returned")
 		assert.NotEmpty(t, resp.Data["expires_at"], "default is 1d for expires_at")
+
+		// check for default value
+		assert.Equal(t, gitlab.AccessLevelValue(40), resp.Data["access_level"])
+	})
+
+	t.Run("successfully create token for role with access level", func(t *testing.T) {
+		data := map[string]interface{}{
+			"id":           ID,
+			"name":         "vault-role-test-access-level",
+			"access_level": 30,
+			"scopes":       []string{"read_api"},
+		}
+		roleName := "successful-access-level"
+		mustRoleCreate(t, backend, req.Storage, roleName, data)
+		resp, err := testIssueRoleToken(t, backend, req, roleName, nil)
+		require.NoError(t, err)
+		require.False(t, resp.IsError())
+
+		assert.NotEmpty(t, resp.Data["token"], "no token returned")
+		assert.NotEmpty(t, resp.Data["id"], "no id returned")
+		assert.NotEmpty(t, resp.Data["access_level"], "no access_level returned")
+		assert.NotEmpty(t, resp.Data["expires_at"], "default is 1d for expires_at")
+
+		assert.Equal(t, gitlab.AccessLevelValue(30), resp.Data["access_level"])
 	})
 
 	t.Run("non-existing role", func(t *testing.T) {

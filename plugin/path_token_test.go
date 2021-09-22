@@ -68,7 +68,27 @@ func TestAccToken(t *testing.T) {
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
 		assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
+	})
 
+	t.Run("successfully create with access level", func(t *testing.T) {
+		t.Parallel()
+
+		e := time.Now().Add(time.Hour * 24)
+		d := map[string]interface{}{
+			"id":           ID,
+			"name":         "vault-test-access-level",
+			"scopes":       []string{"read_api"},
+			"access_level": 30,
+			"expires_at":   e.Unix(),
+		}
+		resp, err := testIssueToken(t, backend, req, d)
+		require.NoError(t, err)
+		require.False(t, resp.IsError())
+
+		assert.NotEmpty(t, resp.Data["token"], "no token returned")
+		assert.NotEmpty(t, resp.Data["id"], "no id returned")
+		assert.NotEmpty(t, resp.Data["access_level"], "no access_level returned")
+		assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
 	})
 
 	t.Run("validation failure", func(t *testing.T) {
