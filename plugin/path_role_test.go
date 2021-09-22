@@ -36,9 +36,10 @@ func TestPathRole(t *testing.T) {
 	testConfigUpdate(t, backend, storage, conf)
 
 	data := map[string]interface{}{
-		"id":     1,
-		"name":   "role-test",
-		"scopes": []string{"api", "read_repository"},
+		"id":           1,
+		"name":         "role-test",
+		"scopes":       []string{"api", "read_repository"},
+		"access_level": 30,
 	}
 	t.Run("successful", func(t *testing.T) {
 		roleName := "successful"
@@ -56,6 +57,7 @@ func TestPathRole(t *testing.T) {
 		a.Equal("role-test", resp.Data["name"])
 		a.Equal(1, resp.Data["id"])
 		a.Equal([]string{"api", "read_repository"}, resp.Data["scopes"])
+		a.Equal(30, resp.Data["access_level"])
 
 		mustRoleDelete(t, backend, storage, roleName)
 	})
@@ -87,8 +89,9 @@ func TestPathRole(t *testing.T) {
 	t.Run("validation failure", func(t *testing.T) {
 		roleName := "validation-failure"
 		d := map[string]interface{}{
-			"id":        -1,
-			"token_ttl": fmt.Sprintf("%dh", 30*24),
+			"id":           -1,
+			"token_ttl":    fmt.Sprintf("%dh", 30*24),
+			"access_level": 31,
 		}
 		resp, err := testRoleCreate(t, backend, storage, roleName, d)
 		require.NoError(t, err)
@@ -98,6 +101,7 @@ func TestPathRole(t *testing.T) {
 		require.Contains(t, resp.Data["error"], "name is empty")
 		require.Contains(t, resp.Data["error"], "scopes are empty")
 		require.Contains(t, resp.Data["error"], "exceeds configured maximum ttl")
+		require.Contains(t, resp.Data["error"], "invalid access level")
 	})
 }
 

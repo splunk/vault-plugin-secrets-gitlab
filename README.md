@@ -18,7 +18,7 @@ This is a backend pluing to be used with Vault. This plugin generates [Gitlab Pr
 ## Requirements
 
 - Gitlab instance with **13.10** or later for API compatibility
-- You need **14.2** or later to have access level
+- You need **14.1** or later to have access level
 - Self-managed instances on Free and above. Or, GitLab SaaS Premium and above
 - a token of a user with maintainer or higher permission in a project
 

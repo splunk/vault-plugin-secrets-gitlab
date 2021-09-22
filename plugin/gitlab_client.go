@@ -77,6 +77,9 @@ func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageE
 		expiration := gitlab.ISOTime(*expiresAt)
 		opt.ExpiresAt = &expiration
 	}
+	if tokenStorage.AccessLevel != 0 {
+		opt.AccessLevel = (*gitlab.AccessLevelValue)(&tokenStorage.AccessLevel)
+	}
 	pat, _, err := gc.client.ProjectAccessTokens.CreateProjectAccessToken(tokenStorage.ID, &opt)
 	if err != nil {
 		return nil, err

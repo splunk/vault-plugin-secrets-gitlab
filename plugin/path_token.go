@@ -41,20 +41,19 @@ var accessTokenSchema = map[string]*framework.FieldSchema{
 		Type:        framework.TypeTime,
 		Description: "The token expires at midnight UTC on that date",
 	},
-	// Not valid until gitlab 14.1
-	// "access_level": {
-	// 	Type:        framework.TypeInt,
-	// 	Description: "access level of project access token",
-	//  Default: accessLevelMaintainer,
-	// },
+	"access_level": {
+		Type:        framework.TypeInt,
+		Description: "access level of project access token",
+	},
 }
 
 func tokenDetails(pat *PAT) map[string]interface{} {
 	d := map[string]interface{}{
-		"token":  pat.Token,
-		"id":     pat.ID,
-		"name":   pat.Name,
-		"scopes": pat.Scopes,
+		"token":        pat.Token,
+		"id":           pat.ID,
+		"name":         pat.Name,
+		"scopes":       pat.Scopes,
+		"access_level": pat.AccessLevel,
 	}
 	if pat.ExpiresAt != nil {
 		d["expires_at"] = time.Time(*pat.ExpiresAt)
