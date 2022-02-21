@@ -5,7 +5,7 @@
 [![codecov-badge]][codecov]
 ![go-version-badge]
 
-This is a backend pluing to be used with Vault. This plugin generates [Gitlab Project Access Tokens][pat]
+This is a backend plugin to be used with Vault. This plugin generates [Gitlab Project Access Tokens][pat]
 
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
