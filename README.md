@@ -5,7 +5,7 @@
 [![codecov-badge]][codecov]
 ![go-version-badge]
 
-This is a backend plugin to be used with Vault. This plugin generates [Gitlab Project Access Tokens][pat]
+This is a backend plugin to be used with Vault. This plugin generates [Project Access Tokens][pat] and [Group Access Tokens][gat]
 
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
@@ -17,12 +17,12 @@ This is a backend plugin to be used with Vault. This plugin generates [Gitlab Pr
 
 ## Requirements
 
-- Gitlab instance with **13.10** or later for API compatibility
+- Gitlab instance with **13.10** or later for API compatibility for [Project Access Tokens][pat] and **14.7** or later for [Group Access Tokens][gat]
 - You need **14.1** or later to have access level
 - Self-managed instances on Free and above. Or, GitLab SaaS Premium and above
-- a token of a user with maintainer or higher permission in a project
+- a token of a user with maintainer or higher permission in a project or group
 
-- Lifting API rate limit for the user whose token will be used in this plugin to generate/revoke project access tokens. Admin of self-hosted can check [this doc][lift rate limit] to allow specific users to bypass authenticated request rate limiting. For SaaS Gitlab, I have not confirmed how to lift API limit yet.
+- Lifting API rate limit for the user whose token will be used in this plugin to generate/revoke project/group access tokens. Admin of self-hosted can check [this doc][lift rate limit] to allow specific users to bypass authenticated request rate limiting. For SaaS Gitlab, I have not confirmed how to lift API limit yet.
 
 ## Getting Started
 
@@ -143,6 +143,7 @@ Please refer [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF
 [Apache Software License version 2.0](LICENSE)
 
 [pat]: https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html
+[gat]: https://docs.gitlab.com/ee/user/group/settings/group_access_tokens.html
 [lift rate limit]: https://docs.gitlab.com/ee/user/admin_area/settings/user_and_ip_rate_limits.html#allow-specific-users-to-bypass-authenticated-request-rate-limiting
 [vault-plugin-secrets-artifactory]: https://github.com/splunk/vault-plugin-secrets-artifactory
 [vault plugin]:https://www.vaultproject.io/docs/internals/plugins.html

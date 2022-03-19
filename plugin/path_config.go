@@ -159,7 +159,7 @@ Configure the Gitlab backend.
 `
 
 const pathConfigHelpDesc = `
-The Gitlab backend requires credentials for creating a project access token.
+The Gitlab backend requires credentials for creating an access token.
 This endpoint is used to configure those credentials as well as default values
 for the backend in general.
 `

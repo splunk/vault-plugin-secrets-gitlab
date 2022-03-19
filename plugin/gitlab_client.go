@@ -30,6 +30,7 @@ type Client interface {
 	CreateProjectAccessToken(*BaseTokenStorageEntry, *time.Time) (*PAT, error)
 	// RevokeProjectAccessToken(*BaseTokenStorageEntry) error
 	Valid() bool
+	CreateGroupAccessToken(*BaseTokenStorageEntry, *time.Time) (*GAT, error)
 }
 
 type gitlabClient struct {
@@ -68,6 +69,7 @@ func (gc *gitlabClient) Valid() bool {
 
 // 	return nil, nil
 // }
+
 func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageEntry, expiresAt *time.Time) (*PAT, error) {
 	opt := gitlab.CreateProjectAccessTokenOptions{
 		Name:   &tokenStorage.Name,
@@ -90,3 +92,22 @@ func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageE
 // func (gc *gitlabClient) RevokeProjectAccessToken(tokenStorage *BaseTokenStorageEntry) error {
 // 	return nil
 // }
+
+func (gc *gitlabClient) CreateGroupAccessToken(tokenStorage *BaseTokenStorageEntry, expiresAt *time.Time) (*GAT, error) {
+	opt := gitlab.CreateGroupAccessTokenOptions{
+		Name:   &tokenStorage.Name,
+		Scopes: &tokenStorage.Scopes,
+	}
+	if expiresAt != nil {
+		expiration := gitlab.ISOTime(*expiresAt)
+		opt.ExpiresAt = &expiration
+	}
+	if tokenStorage.AccessLevel != 0 {
+		opt.AccessLevel = (*gitlab.AccessLevelValue)(&tokenStorage.AccessLevel)
+	}
+	gat, _, err := gc.client.GroupAccessTokens.CreateGroupAccessToken(tokenStorage.ID, &opt)
+	if err != nil {
+		return nil, err
+	}
+	return gat, nil
+}

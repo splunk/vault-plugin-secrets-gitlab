@@ -32,11 +32,11 @@ var roleSchema = map[string]*framework.FieldSchema{
 	},
 	"id": {
 		Type:        framework.TypeInt,
-		Description: "Project ID to create a project access token for",
+		Description: "Project/Group ID to create an access token for",
 	},
 	"name": {
 		Type:        framework.TypeString,
-		Description: "The name of the project access token",
+		Description: "The name of the access token",
 	},
 	"scopes": {
 		Type:        framework.TypeCommaStringSlice,
@@ -49,7 +49,11 @@ var roleSchema = map[string]*framework.FieldSchema{
 	},
 	"access_level": {
 		Type:        framework.TypeInt,
-		Description: "access level of project access token",
+		Description: "access level of access token",
+	},
+	"token_type": {
+		Type:        framework.TypeString,
+		Description: "access token type",
 	},
 }
 
@@ -61,6 +65,7 @@ func roleDetail(role *RoleStorageEntry) map[string]interface{} {
 		"scopes":       role.BaseTokenStorage.Scopes,
 		"access_level": role.BaseTokenStorage.AccessLevel,
 		"token_ttl":    int64(role.TokenTTL / time.Second),
+		"token_type":   role.BaseTokenStorage.TokenType,
 	}
 }
 
@@ -89,10 +94,10 @@ func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.R
 	role.retrieve(data)
 	config, err := getConfig(ctx, req.Storage)
 	if err != nil {
-		return logical.ErrorResponse("failed to obtain artifactory config - %s", err.Error()), nil
+		return logical.ErrorResponse("failed to obtain gitlab config - %s", err.Error()), nil
 	}
 	if config == nil {
-		return logical.ErrorResponse("artifactory backend configuration has not been set up"), nil
+		return logical.ErrorResponse("gitlab backend configuration has not been set up"), nil
 	}
 	err = role.assertValid(config.MaxTTL)
 	if err != nil {
@@ -106,7 +111,7 @@ func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.R
 		return logical.ErrorResponse(err.Error()), nil
 	}
 	b.Logger().Debug("successfully create role", "role_name", roleName, "id", role.BaseTokenStorage.ID,
-		"name", role.BaseTokenStorage.Name, "scopes", role.BaseTokenStorage.Scopes)
+		"name", role.BaseTokenStorage.Name, "scopes", role.BaseTokenStorage.Scopes, "token_type", role.BaseTokenStorage.TokenType)
 
 	return &logical.Response{
 		Data:     roleDetail(role),
@@ -209,10 +214,10 @@ func pathRoleList(b *GitlabBackend) []*framework.Path {
 	return paths
 }
 
-const pathRoleHelpSyn = `Create a role with parameters that are used to generate a project access token.`
+const pathRoleHelpSyn = `Create a role with parameters that are used to generate an access token.`
 const pathRoleHelpDesc = `
-This path allows you to create a role whose parameters will be used to generate a project access token. 
-You must supply a project id to generate a token for, a name, which will be used as a name field in Gitlab, 
+This path allows you to create a role whose parameters will be used to generate an access token. 
+You must supply a project/group id to generate a token for, a name, which will be used as a name field in Gitlab, 
 and scopes for the generated project access token.
 `
 

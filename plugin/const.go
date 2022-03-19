@@ -18,6 +18,8 @@ import "github.com/xanzy/go-gitlab"
 
 type PAT = gitlab.ProjectAccessToken
 
+type GAT = gitlab.GroupAccessToken
+
 const (
 	pathPatternConfig = "config"
 	pathPatternToken  = "token"
