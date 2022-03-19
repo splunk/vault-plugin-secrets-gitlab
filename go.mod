@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/vault/sdk v0.4.1
 	github.com/mitchellh/mapstructure v1.4.2
 	github.com/stretchr/testify v1.7.1
-	github.com/xanzy/go-gitlab v0.50.4
+	github.com/xanzy/go-gitlab v0.60.0
 )
 
 require (
@@ -20,7 +20,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v0.16.2 // indirect
