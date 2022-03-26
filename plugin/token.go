@@ -125,3 +125,23 @@ func (baseTokenStorage *BaseTokenStorageEntry) retrieve(data *framework.FieldDat
 		baseTokenStorage.TokenType = tokenType.(string)
 	}
 }
+
+// not right way to do this. use generic introduced in 1.18
+func (baseTokenStorage *BaseTokenStorageEntry) createAccessToken(gc Client, expiresAt time.Time) (data map[string]interface{}, err error) {
+	switch baseTokenStorage.TokenType {
+	case tokenTypeGroup:
+		gat, err := gc.CreateGroupAccessToken(baseTokenStorage, &expiresAt)
+		if err != nil {
+			err = fmt.Errorf("Failed to create a group token - " + err.Error())
+		}
+		data = groupTokenDetails(gat)
+	case tokenTypeProject:
+		pat, err := gc.CreateProjectAccessToken(baseTokenStorage, &expiresAt)
+		if err != nil {
+			err = fmt.Errorf("Failed to create a project token - " + err.Error())
+		}
+		data = projectTokenDetails(pat)
+	}
+
+	return
+}

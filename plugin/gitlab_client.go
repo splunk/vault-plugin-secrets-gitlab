@@ -29,8 +29,8 @@ type Client interface {
 	// ListProjectAccessToken(int) ([]*PAT, error)
 	CreateProjectAccessToken(*BaseTokenStorageEntry, *time.Time) (*PAT, error)
 	// RevokeProjectAccessToken(*BaseTokenStorageEntry) error
-	Valid() bool
 	CreateGroupAccessToken(*BaseTokenStorageEntry, *time.Time) (*GAT, error)
+	Valid() bool
 }
 
 type gitlabClient struct {
@@ -69,7 +69,6 @@ func (gc *gitlabClient) Valid() bool {
 
 // 	return nil, nil
 // }
-
 func (gc *gitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageEntry, expiresAt *time.Time) (*PAT, error) {
 	opt := gitlab.CreateProjectAccessTokenOptions{
 		Name:   &tokenStorage.Name,

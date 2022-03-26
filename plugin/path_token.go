@@ -51,7 +51,7 @@ var accessTokenSchema = map[string]*framework.FieldSchema{
 	},
 }
 
-func tokenDetails(pat *PAT) map[string]interface{} {
+func projectTokenDetails(pat *PAT) map[string]interface{} {
 	d := map[string]interface{}{
 		"token":        pat.Token,
 		"id":           pat.ID,
@@ -61,6 +61,19 @@ func tokenDetails(pat *PAT) map[string]interface{} {
 	}
 	if pat.ExpiresAt != nil {
 		d["expires_at"] = time.Time(*pat.ExpiresAt)
+	}
+	return d
+}
+func groupTokenDetails(gat *GAT) map[string]interface{} {
+	d := map[string]interface{}{
+		"token":        gat.Token,
+		"id":           gat.ID,
+		"name":         gat.Name,
+		"scopes":       gat.Scopes,
+		"access_level": gat.AccessLevel,
+	}
+	if gat.ExpiresAt != nil {
+		d["expires_at"] = time.Time(*gat.ExpiresAt)
 	}
 	return d
 }
@@ -88,11 +101,12 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 
 	b.Logger().Debug("generating access token", "id", tokenStorage.BaseTokenStorage.ID,
 		"name", tokenStorage.BaseTokenStorage.Name, "scopes", tokenStorage.BaseTokenStorage.Scopes)
-	pat, err := gc.CreateProjectAccessToken(&tokenStorage.BaseTokenStorage, tokenStorage.ExpiresAt)
+
+	d, err := tokenStorage.BaseTokenStorage.createAccessToken(gc, *tokenStorage.ExpiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
-	return &logical.Response{Data: tokenDetails(pat)}, nil
+	return &logical.Response{Data: d}, nil
 }
 
 // set up the paths for the roles within vault

@@ -45,12 +45,11 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 
 	expiresAt := time.Now().UTC().Add(role.TokenTTL)
 	b.Logger().Debug("generating access token for a role", "role_name", role.RoleName, "expires_at", expiresAt)
-	pat, err := gc.CreateProjectAccessToken(&role.BaseTokenStorage, &expiresAt)
+	d, err := role.BaseTokenStorage.createAccessToken(gc, expiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
-
-	return &logical.Response{Data: tokenDetails(pat)}, nil
+	return &logical.Response{Data: d}, nil
 }
 
 // set up the paths for the roles within vault
