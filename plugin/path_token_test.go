@@ -36,9 +36,10 @@ func TestAccToken(t *testing.T) {
 
 	t.Run("successfully create", func(t *testing.T) {
 		d := map[string]interface{}{
-			"id":     ID,
-			"name":   "vault-test",
-			"scopes": []string{"read_api"},
+			"id":         ID,
+			"name":       "vault-test",
+			"scopes":     []string{"read_api"},
+			"token_type": "project",
 		}
 		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
@@ -57,6 +58,7 @@ func TestAccToken(t *testing.T) {
 			"name":       "vault-test-expires",
 			"scopes":     []string{"read_api"},
 			"expires_at": e.Unix(),
+			"token_type": "project",
 		}
 		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
@@ -75,6 +77,7 @@ func TestAccToken(t *testing.T) {
 			"scopes":       []string{"read_api"},
 			"access_level": 30,
 			"expires_at":   e.Unix(),
+			"token_type":   "project",
 		}
 		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
@@ -101,6 +104,7 @@ func TestAccToken(t *testing.T) {
 		require.Contains(t, resp.Data["error"], "id is empty or invalid")
 		require.Contains(t, resp.Data["error"], "name is empty")
 		require.Contains(t, resp.Data["error"], "scopes are empty")
+		require.Contains(t, resp.Data["error"], "token_type must be either")
 	})
 
 	t.Run("exceeding max token lifetime", func(t *testing.T) {
@@ -118,6 +122,7 @@ func TestAccToken(t *testing.T) {
 			"name":       "vault-test-exceeding-lifetime",
 			"scopes":     []string{"read_api"},
 			"expires_at": e.Unix(),
+			"token_type": "project",
 		}
 		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)

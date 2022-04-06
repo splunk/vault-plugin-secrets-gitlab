@@ -36,9 +36,10 @@ func TestAccRoleToken(t *testing.T) {
 
 	t.Run("successfully create", func(t *testing.T) {
 		data := map[string]interface{}{
-			"id":     ID,
-			"name":   "vault-role-test",
-			"scopes": []string{"read_api"},
+			"id":         ID,
+			"name":       "vault-role-test",
+			"scopes":     []string{"read_api"},
+			"token_type": "project",
 		}
 		roleName := "successful"
 		mustRoleCreate(t, backend, req.Storage, roleName, data)
@@ -61,6 +62,7 @@ func TestAccRoleToken(t *testing.T) {
 			"name":         "vault-role-test-access-level",
 			"access_level": 30,
 			"scopes":       []string{"read_api"},
+			"token_type":   "project",
 		}
 		roleName := "successful-access-level"
 		mustRoleCreate(t, backend, req.Storage, roleName, data)

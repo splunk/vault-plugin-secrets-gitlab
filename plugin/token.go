@@ -25,6 +25,11 @@ import (
 
 var errInvalidAccessLevel = errors.New("invalid access level")
 
+const (
+	tokenTypeProject string = "project"
+	tokenTypeGroup   string = "group"
+)
+
 type TokenStorageEntry struct {
 	BaseTokenStorage BaseTokenStorageEntry
 	ExpiresAt        *time.Time `json:"expires_at" structs:"expires_at" mapstructure:"expires_at,omitempty"`
@@ -36,6 +41,7 @@ type BaseTokenStorageEntry struct {
 	Name        string   `json:"name" structs:"name" mapstructure:"name"`
 	Scopes      []string `json:"scopes" structs:"scopes" mapstructure:"scopes"`
 	AccessLevel int      `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
+	TokenType   string   `json:"token_type" struct:"token_type" mapstructure:"token_type,omitempty"`
 }
 
 func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration) error {
@@ -77,7 +83,21 @@ func (baseTokenStorage *BaseTokenStorageEntry) assertValid() error {
 		err = multierror.Append(err, errInvalidAccessLevel)
 	}
 
+	// no default type for access token
+	if e := validateTokenType(baseTokenStorage.TokenType); err != nil {
+		err = multierror.Append(err, e)
+	}
+
 	return err.ErrorOrNil()
+}
+
+func validateTokenType(t string) error {
+	switch t {
+	case tokenTypeGroup, tokenTypeProject:
+		return nil
+	default:
+		return fmt.Errorf("token_type must be either %s or %s", tokenTypeProject, tokenTypeGroup)
+	}
 }
 
 func (tokenStorage *TokenStorageEntry) retrieve(data *framework.FieldData) {
@@ -101,4 +121,27 @@ func (baseTokenStorage *BaseTokenStorageEntry) retrieve(data *framework.FieldDat
 	if accessLevelRaw, ok := data.GetOk("access_level"); ok {
 		baseTokenStorage.AccessLevel = accessLevelRaw.(int)
 	}
+	if tokenType, ok := data.GetOk("token_type"); ok {
+		baseTokenStorage.TokenType = tokenType.(string)
+	}
+}
+
+// not right way to do this. use generic introduced in 1.18
+func (baseTokenStorage *BaseTokenStorageEntry) createAccessToken(gc Client, expiresAt time.Time) (data map[string]interface{}, err error) {
+	switch baseTokenStorage.TokenType {
+	case tokenTypeGroup:
+		gat, err := gc.CreateGroupAccessToken(baseTokenStorage, &expiresAt)
+		if err != nil {
+			err = fmt.Errorf("Failed to create a group token - " + err.Error())
+		}
+		data = groupTokenDetails(gat)
+	case tokenTypeProject:
+		pat, err := gc.CreateProjectAccessToken(baseTokenStorage, &expiresAt)
+		if err != nil {
+			err = fmt.Errorf("Failed to create a project token - " + err.Error())
+		}
+		data = projectTokenDetails(pat)
+	}
+
+	return
 }

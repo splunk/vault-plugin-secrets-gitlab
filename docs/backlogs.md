@@ -31,6 +31,6 @@ For comprehensive CI,
 
 ## Acceptance Testing
 
-Running test against real servers doesn't seem good idea. Create an isolated environment by spinning up vault and gitlab in docker in CI. Then, run full suite of testing there. *Self-hosted GitLab has project access token available from free version*
+Running test against real servers doesn't seem good idea. Create an isolated environment by spinning up vault and gitlab in docker in CI. Then, run full suite of testing there. *Self-hosted GitLab has project/group access token available from free version*
 
 [granular control on token expiry]: https://gitlab.com/gitlab-org/gitlab/-/issues/335535

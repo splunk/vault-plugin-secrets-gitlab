@@ -40,6 +40,7 @@ func TestPathRole(t *testing.T) {
 		"name":         "role-test",
 		"scopes":       []string{"api", "read_repository"},
 		"access_level": 30,
+		"token_type":   "project",
 	}
 	t.Run("successful", func(t *testing.T) {
 		roleName := "successful"
@@ -92,6 +93,7 @@ func TestPathRole(t *testing.T) {
 			"id":           -1,
 			"token_ttl":    fmt.Sprintf("%dh", 30*24),
 			"access_level": 31,
+			"token_type":   "foo",
 		}
 		resp, err := testRoleCreate(t, backend, storage, roleName, d)
 		require.NoError(t, err)
@@ -102,6 +104,7 @@ func TestPathRole(t *testing.T) {
 		require.Contains(t, resp.Data["error"], "scopes are empty")
 		require.Contains(t, resp.Data["error"], "exceeds configured maximum ttl")
 		require.Contains(t, resp.Data["error"], "invalid access level")
+		require.Contains(t, resp.Data["error"], "token_type must be either")
 	})
 }
 
@@ -116,9 +119,10 @@ func TestPathRoleList(t *testing.T) {
 	}
 	testConfigUpdate(t, backend, storage, conf)
 	data := map[string]interface{}{
-		"id":     1,
-		"name":   "role-test",
-		"scopes": []string{"api", "read_repository"},
+		"id":         1,
+		"name":       "role-test",
+		"scopes":     []string{"api", "read_repository"},
+		"token_type": "project",
 	}
 
 	var listResp map[string]interface{}

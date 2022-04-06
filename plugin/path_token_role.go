@@ -45,12 +45,11 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 
 	expiresAt := time.Now().UTC().Add(role.TokenTTL)
 	b.Logger().Debug("generating access token for a role", "role_name", role.RoleName, "expires_at", expiresAt)
-	pat, err := gc.CreateProjectAccessToken(&role.BaseTokenStorage, &expiresAt)
+	d, err := role.BaseTokenStorage.createAccessToken(gc, expiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
-
-	return &logical.Response{Data: tokenDetails(pat)}, nil
+	return &logical.Response{Data: d}, nil
 }
 
 // set up the paths for the roles within vault
@@ -63,7 +62,7 @@ func pathRoleToken(b *GitlabBackend) []*framework.Path {
 				logical.CreateOperation: &framework.PathOperation{
 
 					Callback: b.pathRoleTokenCreate,
-					Summary:  "Create a project access token based on a predefined role",
+					Summary:  "Create an access token based on a predefined role",
 					Examples: roleTokenExamples,
 				},
 				logical.UpdateOperation: &framework.PathOperation{
@@ -78,15 +77,15 @@ func pathRoleToken(b *GitlabBackend) []*framework.Path {
 	return paths
 }
 
-const pathRoleTokenHelpSyn = `Generate a project access token for a given project based on a predefined role`
+const pathRoleTokenHelpSyn = `Generate an access token for a given project/group based on a predefined role`
 const pathRoleTokenHelpDesc = `
-This path allows you to generate a project access token based on a predefined role. You must create a role beforehand in /roles/ path,
-whose parameters are used to generate a project access token.
+This path allows you to generate an access token based on a predefined role. You must create a role beforehand in /roles/ path,
+whose parameters are used to generate an access token.
 `
 
 var roleTokenExamples = []framework.RequestExample{
 	{
-		Description: "Create a project access token based on a predefined role",
+		Description: "Create an access token based on a predefined role",
 		Data: map[string]interface{}{
 			"role_name": "MyRole",
 		},
