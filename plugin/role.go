@@ -34,9 +34,9 @@ type RoleStorageEntry struct {
 	BaseTokenStorage BaseTokenStorageEntry
 }
 
-func (role *RoleStorageEntry) assertValid(maxTTL time.Duration) error {
+func (role *RoleStorageEntry) assertValid(maxTTL time.Duration, allowOwnerLevel bool) error {
 	var err *multierror.Error
-	if e := role.BaseTokenStorage.assertValid(); e != nil {
+	if e := role.BaseTokenStorage.assertValid(allowOwnerLevel); e != nil {
 		err = multierror.Append(err, e)
 	}
 

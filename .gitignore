@@ -6,3 +6,4 @@ coverage.*
 coverage_*
 .tools/
 .go/
+.idea/

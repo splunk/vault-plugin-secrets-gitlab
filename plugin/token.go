@@ -38,9 +38,9 @@ type BaseTokenStorageEntry struct {
 	AccessLevel int      `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
 }
 
-func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration) error {
+func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration, allowOwnerLevel bool) error {
 	var err *multierror.Error
-	if e := tokenStorage.BaseTokenStorage.assertValid(); e != nil {
+	if e := tokenStorage.BaseTokenStorage.assertValid(allowOwnerLevel); e != nil {
 		err = multierror.Append(err, e)
 	}
 
@@ -56,7 +56,7 @@ func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration) error {
 	return err.ErrorOrNil()
 }
 
-func (baseTokenStorage *BaseTokenStorageEntry) assertValid() error {
+func (baseTokenStorage *BaseTokenStorageEntry) assertValid(allowOwnerLevel bool) error {
 	var err *multierror.Error
 	if baseTokenStorage.ID <= 0 {
 		err = multierror.Append(err, errors.New("id is empty or invalid"))
@@ -70,8 +70,14 @@ func (baseTokenStorage *BaseTokenStorageEntry) assertValid() error {
 		err = multierror.Append(err, e)
 	}
 
-	// check validity of access level. allowed values are 0(zero value), 10, 20, 30 and 40
-	if d := baseTokenStorage.AccessLevel / 10; d > 4 || d < 0 {
+	// check validity of access level. allowed values are:
+	// 0(zero value), 10, 20, 30, 40 and 50 (when allowOwnerLevel flag is set)
+	accessLevelFactor := 4
+	if allowOwnerLevel {
+		accessLevelFactor = 5
+	}
+
+	if d := baseTokenStorage.AccessLevel / 10; d > accessLevelFactor || d < 0 {
 		err = multierror.Append(err, errInvalidAccessLevel)
 	} else if baseTokenStorage.AccessLevel%10 != 0 {
 		err = multierror.Append(err, errInvalidAccessLevel)

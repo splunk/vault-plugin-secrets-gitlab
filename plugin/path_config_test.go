@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,8 +41,9 @@ func TestConfig(t *testing.T) {
 		testConfigUpdate(t, backend, reqStorage, conf, NoTTLWarning("max_ttl"))
 
 		expected := map[string]interface{}{
-			"base_url": "https://my.gitlab.com",
-			"max_ttl":  int64(0),
+			"base_url":          "https://my.gitlab.com",
+			"max_ttl":           int64(0),
+			"allow_owner_level": false,
 		}
 
 		testConfigRead(t, backend, reqStorage, expected)
@@ -70,8 +71,9 @@ func TestConfig(t *testing.T) {
 		testConfigUpdate(t, backend, reqStorage, conf)
 
 		expected := map[string]interface{}{
-			"base_url": "https://my.gitlab.com",
-			"max_ttl":  int64(30 * 24 * 3600),
+			"base_url":          "https://my.gitlab.com",
+			"max_ttl":           int64(30 * 24 * 3600),
+			"allow_owner_level": false,
 		}
 
 		testConfigRead(t, backend, reqStorage, expected)

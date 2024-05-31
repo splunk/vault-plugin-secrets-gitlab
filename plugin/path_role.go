@@ -65,6 +65,7 @@ func roleDetail(role *RoleStorageEntry) map[string]interface{} {
 }
 
 func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+
 	warnings := []string{}
 
 	roleName := data.Get("role_name").(string)
@@ -94,7 +95,7 @@ func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.R
 	if config == nil {
 		return logical.ErrorResponse("artifactory backend configuration has not been set up"), nil
 	}
-	err = role.assertValid(config.MaxTTL)
+	err = role.assertValid(config.MaxTTL, config.AllowOwnerLevel)
 	if err != nil {
 		return logical.ErrorResponse("Failed to validate - " + err.Error()), nil
 	}

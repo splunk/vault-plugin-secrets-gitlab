@@ -77,7 +77,7 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 	if config == nil {
 		return logical.ErrorResponse("artifactory backend configuration has not been set up"), nil
 	}
-	err = tokenStorage.assertValid(config.MaxTTL)
+	err = tokenStorage.assertValid(config.MaxTTL, config.AllowOwnerLevel)
 	if err != nil {
 		return logical.ErrorResponse("Failed to validate - " + err.Error()), nil
 	}

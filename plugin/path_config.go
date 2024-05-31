@@ -48,12 +48,19 @@ var configSchema = map[string]*framework.FieldSchema{
 		Description: `Maximum lifetime a generated token will be valid for. If <= 0, will use system default(0, never expire)`,
 		Default:     0,
 	},
+	"allow_owner_level": {
+		Type:        framework.TypeBool,
+		Description: "allow to create roles with owner level access",
+		Required:    false,
+		Default:     false,
+	},
 }
 
 func configDetail(config *ConfigStorageEntry) map[string]interface{} {
 	return map[string]interface{}{
-		"base_url": config.BaseURL,
-		"max_ttl":  int64(config.MaxTTL / time.Second),
+		"base_url":          config.BaseURL,
+		"max_ttl":           int64(config.MaxTTL / time.Second),
+		"allow_owner_level": config.AllowOwnerLevel,
 	}
 }
 
@@ -106,6 +113,11 @@ func (b *GitlabBackend) pathConfigWrite(ctx context.Context, req *logical.Reques
 
 	if config.MaxTTL == 0 {
 		warnings = append(warnings, NoTTLWarning("max_ttl"))
+	}
+
+	allowOwnerLevel, ok := data.GetOk("allow_owner_level")
+	if ok {
+		config.AllowOwnerLevel = allowOwnerLevel.(bool)
 	}
 
 	// maxTTLRaw, ok := data.GetOk("max_ttl")
@@ -168,9 +180,10 @@ var configExamples = []framework.RequestExample{
 	{
 		Description: "Create/update backend configuration",
 		Data: map[string]interface{}{
-			"base_url": "https://my.gitlab.com",
-			"token":    "MyPersonalAccessToken",
-			"max_ttl":  "168h",
+			"base_url":          "https://my.gitlab.com",
+			"token":             "MyPersonalAccessToken",
+			"max_ttl":           "168h",
+			"allow_owner_level": true,
 		},
 	},
 }
