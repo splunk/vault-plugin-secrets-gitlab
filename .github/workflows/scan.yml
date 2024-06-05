@@ -9,9 +9,9 @@ on:
 permissions:
   contents: read
 jobs:
-  # FOSSA:
-  #   uses: splunk/oss-scanning/.github/workflows/oss-scan.yml@main
-  #   secrets: inherit
+  FOSSA:
+    uses: splunk/oss-scanning/.github/workflows/oss-scan.yml@main
+    secrets: inherit
   SAST:
     name: Semgrep
     runs-on: ubuntu-latest
