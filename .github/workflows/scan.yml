@@ -1,0 +1,24 @@
+name: Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+jobs:
+  # FOSSA:
+  #   uses: splunk/oss-scanning/.github/workflows/oss-scan.yml@main
+  #   secrets: inherit
+  SAST:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          publishToken: ${{ secrets.SEMGREP_KEY }}
