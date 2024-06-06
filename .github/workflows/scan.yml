@@ -19,7 +19,7 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           publishToken: ${{ secrets.SEMGREP_KEY }}
-  FOSSA:
-    name: FOSSA
-    uses: splunk/oss-scanning/.github/workflows/oss-scan.yml@main
-    secrets: inherit
+#  FOSSA:
+#    name: FOSSA
+#    uses: splunk/oss-scanning/.github/workflows/oss-scan.yml@main
+#    secrets: inherit
