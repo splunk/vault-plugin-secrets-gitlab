@@ -1,4 +1,4 @@
-name: SAST
+name: Scan
 
 on:
   push:
@@ -19,3 +19,7 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           publishToken: ${{ secrets.SEMGREP_KEY }}
+  OSS:
+    name: OSS
+    uses: splunk/oss-scanning-public/.github/workflows/oss-scan.yml@main
+    secrets: inherit
