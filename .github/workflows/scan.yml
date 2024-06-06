@@ -10,6 +10,7 @@ permissions:
   contents: read
 jobs:
   SAST:
+    name: SAST
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,5 +20,6 @@ jobs:
         with:
           publishToken: ${{ secrets.SEMGREP_KEY }}
   FOSSA:
+    name: FOSSA
     uses: splunk/oss-scanning/.github/workflows/oss-scan.yml@main
     secrets: inherit
