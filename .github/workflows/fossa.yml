@@ -1,0 +1,12 @@
+name: OSS Scan
+jobs:
+  fossa-scan:
+    uses: splunk/oss-scanning/.github/workflows/oss-sast.yml@main
+    secrets: inherit
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    types:
+      - opened
