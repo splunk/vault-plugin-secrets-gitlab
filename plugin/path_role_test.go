@@ -103,6 +103,61 @@ func TestPathRole(t *testing.T) {
 		require.Contains(t, resp.Data["error"], "exceeds configured maximum ttl")
 		require.Contains(t, resp.Data["error"], "invalid access level")
 	})
+
+	t.Run("validation of not allowed access level", func(t *testing.T) {
+		roleName := "validation-not-allowed-access-level"
+		d := map[string]interface{}{
+			"id":           1,
+			"name":         "role-test-not-allowed-access-level",
+			"scopes":       []string{"api", "read_repository"},
+			"access_level": 50,
+		}
+		resp, err := testRoleCreate(t, backend, storage, roleName, d)
+		require.NoError(t, err)
+		require.True(t, resp.IsError())
+
+		require.Contains(t, resp.Data["error"], "access level not permitted")
+	})
+}
+
+func TestPathRoleWithAllowOwnerAccessLevel(t *testing.T) {
+	a := assert.New(t)
+	backend, storage := getTestBackend(t, false)
+
+	conf := map[string]interface{}{
+		"base_url":          "http://randomhost",
+		"token":             "gibberish",
+		"allow_owner_level": true,
+	}
+	testConfigUpdate(t, backend, storage, conf)
+
+	data := map[string]interface{}{
+		"id":           1,
+		"name":         "role-test",
+		"scopes":       []string{"api", "read_repository"},
+		"access_level": 50,
+	}
+
+	t.Run("successful", func(t *testing.T) {
+		roleName := "successful"
+		resp, err := testRoleRead(t, backend, storage, roleName)
+		require.NoError(t, err, "non-existing role should not return error")
+		require.Nil(t, resp, "non-existing role should return nil response")
+
+		mustRoleCreate(t, backend, storage, roleName, data)
+
+		resp, err = testRoleRead(t, backend, storage, roleName)
+		require.NoError(t, err, "existing role should not return error")
+		require.False(t, resp.IsError())
+
+		a.Equal(roleName, resp.Data["role_name"])
+		a.Equal("role-test", resp.Data["name"])
+		a.Equal(1, resp.Data["id"])
+		a.Equal([]string{"api", "read_repository"}, resp.Data["scopes"])
+		a.Equal(50, resp.Data["access_level"])
+
+		mustRoleDelete(t, backend, storage, roleName)
+	})
 }
 
 func TestPathRoleList(t *testing.T) {

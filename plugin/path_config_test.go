@@ -119,7 +119,7 @@ func TestConfig(t *testing.T) {
 		testConfigRead(t, backend, reqStorage, expected)
 
 		// Validating allow_owner_token set to false
-		
+
 		conf["allow_owner_level"] = false
 		expected["allow_owner_level"] = false
 		testConfigUpdate(t, backend, reqStorage, conf)
