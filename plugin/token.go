@@ -23,7 +23,8 @@ import (
 	"github.com/hashicorp/vault/sdk/framework"
 )
 
-var errInvalidAccessLevel = errors.New("invalid access level")
+var errAccessLevelInvalid = errors.New("invalid access level")
+var errAccessLevelNotPermitted = errors.New("access level not permitted")
 
 type TokenStorageEntry struct {
 	BaseTokenStorage BaseTokenStorageEntry
@@ -72,15 +73,17 @@ func (baseTokenStorage *BaseTokenStorageEntry) assertValid(allowOwnerLevel bool)
 
 	// check validity of access level. allowed values are:
 	// 0(zero value), 10, 20, 30, 40 and 50 (when allowOwnerLevel flag is set)
-	accessLevelFactor := 4
+	maxAllowedAccessLevel := 40
 	if allowOwnerLevel {
-		accessLevelFactor = 5
+		maxAllowedAccessLevel = 50
 	}
 
-	if d := baseTokenStorage.AccessLevel / 10; d > accessLevelFactor || d < 0 {
-		err = multierror.Append(err, errInvalidAccessLevel)
-	} else if baseTokenStorage.AccessLevel%10 != 0 {
-		err = multierror.Append(err, errInvalidAccessLevel)
+	requestedAccessLevel := baseTokenStorage.AccessLevel
+
+	if requestedAccessLevel%10 != 0 {
+		err = multierror.Append(err, errAccessLevelInvalid)
+	} else if requestedAccessLevel > maxAllowedAccessLevel || requestedAccessLevel < 0 {
+		err = multierror.Append(err, errAccessLevelNotPermitted)
 	}
 
 	return err.ErrorOrNil()
