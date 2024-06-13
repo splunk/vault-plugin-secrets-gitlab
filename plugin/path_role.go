@@ -90,10 +90,10 @@ func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.R
 	role.retrieve(data)
 	config, err := getConfig(ctx, req.Storage)
 	if err != nil {
-		return logical.ErrorResponse("failed to obtain artifactory config - %s", err.Error()), nil
+		return logical.ErrorResponse("failed to obtain GitLab config - %s", err.Error()), nil
 	}
 	if config == nil {
-		return logical.ErrorResponse("artifactory backend configuration has not been set up"), nil
+		return logical.ErrorResponse("GitLab backend configuration has not been set up"), nil
 	}
 	err = role.assertValid(config.MaxTTL, config.AllowOwnerLevel)
 	if err != nil {
@@ -166,12 +166,25 @@ func (b *GitlabBackend) pathRoleList(ctx context.Context, req *logical.Request, 
 	return logical.ListResponse(roles), nil
 }
 
+func (b *GitlabBackend) pathRoleExistenceCheck(fieldName string) framework.ExistenceFunc {
+	return func(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
+		roleName := data.Get(fieldName).(string)
+		role, err := getRoleEntry(ctx, req.Storage, roleName)
+		if err != nil {
+			return false, err
+		}
+
+		return role != nil, nil
+	}
+}
+
 // set up the paths for the roles within vault
 func pathRole(b *GitlabBackend) []*framework.Path {
 	paths := []*framework.Path{
 		{
-			Pattern: fmt.Sprintf("%s/%s", pathPatternRoles, framework.GenericNameRegex("role_name")),
-			Fields:  roleSchema,
+			Pattern:        fmt.Sprintf("%s/%s", pathPatternRoles, framework.GenericNameRegex("role_name")),
+			Fields:         roleSchema,
+			ExistenceCheck: b.pathRoleExistenceCheck("role_name"),
 			Operations: map[logical.Operation]framework.OperationHandler{
 				logical.CreateOperation: &framework.PathOperation{
 					Callback: b.pathRoleCreateUpdate,

@@ -45,20 +45,20 @@ tools: .tools .tools/docker-compose .tools/gocover-cobertura .tools/gocovmerge .
 .tools:
 	@mkdir -p .tools
 
-.tools/docker-compose: DOCKER_COMPOSE_VERSION = 1.29.1
+.tools/docker-compose: DOCKER_COMPOSE_VERSION = 2.27.1
 .tools/docker-compose: DOCKER_COMPOSE_BINARY = "docker-compose-$(shell uname -s)-$(shell uname -m)"
 .tools/docker-compose:
 	curl -so .tools/docker-compose -L "https://github.com/docker/compose/releases/download/$(DOCKER_COMPOSE_VERSION)/$(DOCKER_COMPOSE_BINARY)"
 	@chmod +x .tools/docker-compose
 
 .tools/gocover-cobertura:
-	export GOBIN=$(shell pwd)/.tools; go install github.com/boumenot/gocover-cobertura@v1.1.0
+	export GOBIN=$(shell pwd)/.tools; go install github.com/boumenot/gocover-cobertura@v1.2.0
 
 .tools/gocovmerge:
 	export GOBIN=$(shell pwd)/.tools; go install github.com/wadey/gocovmerge@master
 
 .tools/golangci-lint:
-	export GOBIN=$(shell pwd)/.tools; go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.39.0
+	export GOBIN=$(shell pwd)/.tools; go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0
 
 .tools/jq: JQ_VERSION = 1.6
 .tools/jq: JQ_PLATFORM = $(patsubst darwin,osx-amd,$(shell uname -s | tr A-Z a-z))
@@ -66,7 +66,7 @@ tools: .tools .tools/docker-compose .tools/gocover-cobertura .tools/gocovmerge .
 	curl -so .tools/jq -sSL https://github.com/stedolan/jq/releases/download/jq-$(JQ_VERSION)/jq-$(JQ_PLATFORM)64
 	@chmod +x .tools/jq
 
-.tools/vault: VAULT_VERSION = 1.7.1
+.tools/vault: VAULT_VERSION = 1.16.3
 .tools/vault: VAULT_PLATFORM = $(shell uname -s | tr A-Z a-z)
 .tools/vault:
 	curl -so .tools/vault.zip -sSL https://releases.hashicorp.com/vault/$(VAULT_VERSION)/vault_$(VAULT_VERSION)_$(VAULT_PLATFORM)_amd64.zip

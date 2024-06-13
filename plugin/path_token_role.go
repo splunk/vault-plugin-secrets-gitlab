@@ -57,8 +57,9 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 func pathRoleToken(b *GitlabBackend) []*framework.Path {
 	paths := []*framework.Path{
 		{
-			Pattern: fmt.Sprintf("%s/%s", pathPatternToken, framework.GenericNameRegex("role_name")),
-			Fields:  roleTokenSchema,
+			Pattern:        fmt.Sprintf("%s/%s", pathPatternToken, framework.GenericNameRegex("role_name")),
+			Fields:         roleTokenSchema,
+			ExistenceCheck: b.pathTokenExistenceCheck(),
 			Operations: map[logical.Operation]framework.OperationHandler{
 				logical.CreateOperation: &framework.PathOperation{
 

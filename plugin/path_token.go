@@ -72,10 +72,10 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 
 	config, err := getConfig(ctx, req.Storage)
 	if err != nil {
-		return logical.ErrorResponse("failed to obtain artifactory config - %s", err.Error()), nil
+		return logical.ErrorResponse("failed to obtain GitLab config - %s", err.Error()), nil
 	}
 	if config == nil {
-		return logical.ErrorResponse("artifactory backend configuration has not been set up"), nil
+		return logical.ErrorResponse("GitLab backend configuration has not been set up"), nil
 	}
 	err = tokenStorage.assertValid(config.MaxTTL, config.AllowOwnerLevel)
 	if err != nil {
@@ -91,12 +91,22 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 	return &logical.Response{Data: tokenDetails(pat)}, nil
 }
 
+// There is a correctness check that verifies there is an ExistenceFunc for all
+// the paths that have a CreateOperation, so we must define a stub one to pass
+// that if needed.
+func (b *GitlabBackend) pathTokenExistenceCheck() framework.ExistenceFunc {
+	return func(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
+		return false, nil
+	}
+}
+
 // set up the paths for the roles within vault
 func pathToken(b *GitlabBackend) []*framework.Path {
 	paths := []*framework.Path{
 		{
-			Pattern: pathPatternToken,
-			Fields:  accessTokenSchema,
+			Pattern:        pathPatternToken,
+			Fields:         accessTokenSchema,
+			ExistenceCheck: b.pathTokenExistenceCheck(),
 			Operations: map[logical.Operation]framework.OperationHandler{
 				logical.CreateOperation: &framework.PathOperation{
 
