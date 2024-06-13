@@ -91,6 +91,40 @@ func TestConfig(t *testing.T) {
 
 		testConfigRead(t, backend, reqStorage, expected)
 	})
+
+	t.Run("allow_owner_level", func(t *testing.T) {
+		t.Parallel()
+
+		backend, reqStorage := getTestBackend(t, true)
+
+		testConfigRead(t, backend, reqStorage, nil)
+
+		// Validating allow_owner_token set to true
+
+		conf := map[string]interface{}{
+			"base_url":          "https://my.gitlab.com",
+			"token":             "mytoken",
+			"max_ttl":           fmt.Sprintf("%dh", 30*24),
+			"allow_owner_level": true,
+		}
+
+		testConfigUpdate(t, backend, reqStorage, conf)
+
+		expected := map[string]interface{}{
+			"base_url":          "https://my.gitlab.com",
+			"max_ttl":           int64(30 * 24 * 3600),
+			"allow_owner_level": true,
+		}
+
+		testConfigRead(t, backend, reqStorage, expected)
+
+		// Validating allow_owner_token set to false
+		
+		conf["allow_owner_level"] = false
+		expected["allow_owner_level"] = false
+		testConfigUpdate(t, backend, reqStorage, conf)
+		testConfigRead(t, backend, reqStorage, expected)
+	})
 }
 
 func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[string]interface{}, warnings ...string) {
