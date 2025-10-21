@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-// schema for the token, this will map the fields coming in from the
-// vault request field map
+// Schema for the token. This will map the fields coming in from the
+// vault request field map.
 var accessTokenSchema = map[string]*framework.FieldSchema{
 	"id": {
 		Type:        framework.TypeInt,
@@ -55,9 +55,11 @@ func tokenDetails(pat *PAT) map[string]interface{} {
 		"scopes":       pat.Scopes,
 		"access_level": pat.AccessLevel,
 	}
+
 	if pat.ExpiresAt != nil {
 		d["expires_at"] = time.Time(*pat.ExpiresAt)
 	}
+
 	return d
 }
 
@@ -74,9 +76,11 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 	if err != nil {
 		return logical.ErrorResponse("failed to obtain GitLab config - %s", err.Error()), nil
 	}
+
 	if config == nil {
 		return logical.ErrorResponse("GitLab backend configuration has not been set up"), nil
 	}
+
 	err = tokenStorage.assertValid(config.MaxTTL, config.AllowOwnerLevel)
 	if err != nil {
 		return logical.ErrorResponse("Failed to validate - " + err.Error()), nil
@@ -84,10 +88,12 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 
 	b.Logger().Debug("generating access token", "id", tokenStorage.BaseTokenStorage.ID,
 		"name", tokenStorage.BaseTokenStorage.Name, "scopes", tokenStorage.BaseTokenStorage.Scopes)
+
 	pat, err := gc.CreateProjectAccessToken(&tokenStorage.BaseTokenStorage, tokenStorage.ExpiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
+
 	return &logical.Response{Data: tokenDetails(pat)}, nil
 }
 
@@ -95,12 +101,12 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 // the paths that have a CreateOperation, so we must define a stub one to pass
 // that if needed.
 func (b *GitlabBackend) pathTokenExistenceCheck() framework.ExistenceFunc {
-	return func(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
+	return func(_ context.Context, _ *logical.Request, _ *framework.FieldData) (bool, error) {
 		return false, nil
 	}
 }
 
-// set up the paths for the roles within vault
+// Set up the paths for the roles within vault.
 func pathToken(b *GitlabBackend) []*framework.Path {
 	paths := []*framework.Path{
 		{
@@ -126,6 +132,7 @@ func pathToken(b *GitlabBackend) []*framework.Path {
 	return paths
 }
 
+//nolint:gosec
 const pathTokenHelpSyn = `Generate a project access token for a given project with token name, scopes.`
 const pathTokenHelpDesc = `
 This path allows you to generate a project access token. You must supply a project id to generate a token for, a name, which 

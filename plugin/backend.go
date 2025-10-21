@@ -24,18 +24,20 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-// GitlabBackend is the backend for Gitlab plugin
+// GitlabBackend is the backend for Gitlab plugin.
 type GitlabBackend struct {
 	*framework.Backend
+
 	view      logical.Storage
 	client    Client
 	lock      sync.RWMutex
 	roleLocks []*locksutil.LockEntry
 }
 
-func (b *GitlabBackend) getClient(ctx context.Context, s logical.Storage) (Client, error) {
+func (b *GitlabBackend) getClient(ctx context.Context, s logical.Storage) (Client, error) { //nolint:ireturn
 	b.lock.RLock()
 	unlockFunc := b.lock.RUnlock
+
 	defer func() { unlockFunc() }()
 
 	if b.client != nil && b.client.Valid() {
@@ -59,6 +61,7 @@ func (b *GitlabBackend) getClient(ctx context.Context, s logical.Storage) (Clien
 	if err != nil {
 		return nil, err
 	}
+
 	b.client = c
 
 	return c, nil
@@ -69,23 +72,25 @@ func (b *GitlabBackend) reset() {
 
 	b.client = nil
 }
-func (b *GitlabBackend) invalidate(ctx context.Context, key string) {
-	switch key {
-	case pathPatternConfig:
+func (b *GitlabBackend) invalidate(_ context.Context, key string) {
+	if key == pathPatternConfig {
 		b.reset()
 	}
 }
 
-// Factory is factory for backend
-func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
+// Factory is the factory for the backend.
+func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) { //nolint:ireturn
 	b := Backend(c)
-	if err := b.Setup(ctx, c); err != nil {
+
+	err := b.Setup(ctx, c)
+	if err != nil {
 		return nil, err
 	}
+
 	return b, nil
 }
 
-// Backend export the function to create backend and configure
+// Backend exports the function to create backend and configure.
 func Backend(conf *logical.BackendConfig) *GitlabBackend {
 	backend := &GitlabBackend{
 		view:      conf.StorageView,

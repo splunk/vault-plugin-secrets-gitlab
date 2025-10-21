@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
+// RoleStorageEntry represents the role metadata stored in vault.
 type RoleStorageEntry struct {
 	// `json:"" structs:"" mapstructure:""`
 	RoleName string `json:"role_name" structs:"role_name" mapstructure:"role_name"`
@@ -36,7 +37,9 @@ type RoleStorageEntry struct {
 
 func (role *RoleStorageEntry) assertValid(maxTTL time.Duration, allowOwnerLevel bool) error {
 	var err *multierror.Error
-	if e := role.BaseTokenStorage.assertValid(allowOwnerLevel); e != nil {
+
+	e := role.BaseTokenStorage.assertValid(allowOwnerLevel)
+	if e != nil {
 		err = multierror.Append(err, e)
 	}
 
@@ -53,16 +56,19 @@ func (role *RoleStorageEntry) assertValid(maxTTL time.Duration, allowOwnerLevel 
 
 func (role *RoleStorageEntry) retrieve(data *framework.FieldData) {
 	role.BaseTokenStorage.retrieve(data)
-	ttlRaw, ok := data.GetOk("token_ttl")
-	if ok && ttlRaw.(int) > 0 {
-		role.TokenTTL = time.Duration(ttlRaw.(int)) * time.Second
-	} else if role.TokenTTL == time.Duration(0) {
-		role.TokenTTL = time.Duration(roleSchema["token_ttl"].Default.(int)) * time.Second
-	}
 
+	ttlRaw, ok := data.GetOk("token_ttl")
+
+	ttl, _ := ttlRaw.(int)
+	if ok && ttl > 0 {
+		role.TokenTTL = time.Duration(ttl) * time.Second
+	} else if role.TokenTTL == time.Duration(0) {
+		tokenTTL, _ := roleSchema["token_ttl"].Default.(int)
+		role.TokenTTL = time.Duration(tokenTTL) * time.Second
+	}
 }
 
-// save saves a role to storage
+// save saves a role to storage.
 func (role *RoleStorageEntry) save(ctx context.Context, storage logical.Storage) error {
 	entry, err := logical.StorageEntryJSON(fmt.Sprintf("%s/%s", pathPatternRoles, role.RoleName), role)
 	if err != nil {
@@ -72,39 +78,45 @@ func (role *RoleStorageEntry) save(ctx context.Context, storage logical.Storage)
 	return storage.Put(ctx, entry)
 }
 
-// get or create the basic lock for the role name
+// Get or create the basic lock for the role name.
 func (b *GitlabBackend) roleLock(roleName string) *locksutil.LockEntry {
 	return locksutil.LockForKey(b.roleLocks, roleName)
 }
 
-// deleteRoleEntry will remove the role with specified name from storage
+// deleteRoleEntry will remove the role with specified name from storage.
 func deleteRoleEntry(ctx context.Context, storage logical.Storage, roleName string) error {
 	if roleName == "" {
-		return fmt.Errorf("missing role name")
+		return errors.New("missing role name")
 	}
 
 	return storage.Delete(ctx, fmt.Sprintf("%s/%s", pathPatternRoles, roleName))
 }
 
-// getRoleEntry fetches a role from the storage
+// getRoleEntry fetches a role from the storage.
 func getRoleEntry(ctx context.Context, storage logical.Storage, roleName string) (*RoleStorageEntry, error) {
 	var result RoleStorageEntry
-	if entry, err := storage.Get(ctx, fmt.Sprintf("%s/%s", pathPatternRoles, roleName)); err != nil {
+
+	entry, err := storage.Get(ctx, fmt.Sprintf("%s/%s", pathPatternRoles, roleName))
+	if err != nil {
 		return nil, err
 	} else if entry == nil {
 		return nil, nil
-	} else if err := entry.DecodeJSON(&result); err != nil {
+	}
+
+	err = entry.DecodeJSON(&result)
+	if err != nil {
 		return nil, err
 	}
 
 	return &result, nil
 }
 
-// listRoleEntries gets all the roles
+// listRoleEntries gets all the roles.
 func listRoleEntries(ctx context.Context, storage logical.Storage) ([]string, error) {
-	roles, err := storage.List(ctx, fmt.Sprintf("%s/", pathPatternRoles))
+	roles, err := storage.List(ctx, pathPatternRoles+"/")
 	if err != nil {
 		return nil, err
 	}
+
 	return roles, nil
 }

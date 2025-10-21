@@ -16,6 +16,7 @@ package gitlabtoken
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -23,8 +24,8 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-// schema for the role, this will map the fields coming in from the
-// vault request field map
+// Schema for the role, this will map the fields coming in from the
+// vault request field map.
 var roleSchema = map[string]*framework.FieldSchema{
 	"role_name": {
 		Type:        framework.TypeString,
@@ -65,15 +66,19 @@ func roleDetail(role *RoleStorageEntry) map[string]interface{} {
 }
 
 func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-
 	warnings := []string{}
 
-	roleName := data.Get("role_name").(string)
+	roleName, ok := data.Get("role_name").(string)
+	if !ok {
+		return nil, errors.New("string type assertion failed for data field 'role_name'")
+	}
+
 	if roleName == "" {
 		return logical.ErrorResponse("Role name not supplied"), nil
 	}
 
 	lock := b.roleLock(roleName)
+
 	lock.RLock()
 	defer lock.RUnlock()
 
@@ -87,25 +92,32 @@ func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.R
 			RoleName: roleName,
 		}
 	}
+
 	role.retrieve(data)
+
 	config, err := getConfig(ctx, req.Storage)
 	if err != nil {
 		return logical.ErrorResponse("failed to obtain GitLab config - %s", err.Error()), nil
 	}
+
 	if config == nil {
 		return logical.ErrorResponse("GitLab backend configuration has not been set up"), nil
 	}
+
 	err = role.assertValid(config.MaxTTL, config.AllowOwnerLevel)
 	if err != nil {
 		return logical.ErrorResponse("Failed to validate - " + err.Error()), nil
 	}
+
 	if role.TokenTTL == 0 {
 		warnings = append(warnings, NoTTLWarning("token_ttl"))
 	}
 
-	if err := role.save(ctx, req.Storage); err != nil {
+	err = role.save(ctx, req.Storage)
+	if err != nil {
 		return logical.ErrorResponse(err.Error()), nil
 	}
+
 	b.Logger().Debug("successfully create role", "role_name", roleName, "id", role.BaseTokenStorage.ID,
 		"name", role.BaseTokenStorage.Name, "scopes", role.BaseTokenStorage.Scopes)
 
@@ -116,7 +128,11 @@ func (b *GitlabBackend) pathRoleCreateUpdate(ctx context.Context, req *logical.R
 }
 
 func (b *GitlabBackend) pathRoleRead(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	roleName := data.Get("role_name").(string)
+	roleName, ok := data.Get("role_name").(string)
+	if !ok {
+		return nil, errors.New("string type assertion failed for data field 'role_name'")
+	}
+
 	role, err := getRoleEntry(ctx, req.Storage, roleName)
 	if err != nil {
 		return logical.ErrorResponse("Error reading role"), err
@@ -132,12 +148,17 @@ func (b *GitlabBackend) pathRoleRead(ctx context.Context, req *logical.Request, 
 }
 
 func (b *GitlabBackend) pathRoleDelete(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	roleName := data.Get("role_name").(string)
+	roleName, ok := data.Get("role_name").(string)
+	if !ok {
+		return nil, errors.New("string type assertion failed for data field 'role_name'")
+	}
+
 	if roleName == "" {
 		return logical.ErrorResponse("Unable to remove, missing role name"), nil
 	}
 
 	lock := b.roleLock(roleName)
+
 	lock.RLock()
 	defer lock.RUnlock()
 
@@ -146,29 +167,37 @@ func (b *GitlabBackend) pathRoleDelete(ctx context.Context, req *logical.Request
 	if err != nil {
 		return nil, err
 	}
+
 	if role == nil {
 		return nil, nil
 	}
 
-	if err := deleteRoleEntry(ctx, req.Storage, roleName); err != nil {
-		return logical.ErrorResponse(fmt.Sprintf("Unable to remove role %s", roleName)), err
+	err = deleteRoleEntry(ctx, req.Storage, roleName)
+	if err != nil {
+		return logical.ErrorResponse("Unable to remove role " + roleName), err
 	}
 
 	b.Logger().Debug("successfully deleted role", "role_name", roleName)
+
 	return nil, nil
 }
 
-func (b *GitlabBackend) pathRoleList(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *GitlabBackend) pathRoleList(ctx context.Context, req *logical.Request, _ *framework.FieldData) (*logical.Response, error) {
 	roles, err := listRoleEntries(ctx, req.Storage)
 	if err != nil {
 		return logical.ErrorResponse("Error listing roles"), err
 	}
+
 	return logical.ListResponse(roles), nil
 }
 
 func (b *GitlabBackend) pathRoleExistenceCheck(fieldName string) framework.ExistenceFunc {
 	return func(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
-		roleName := data.Get(fieldName).(string)
+		roleName, ok := data.Get(fieldName).(string)
+		if !ok {
+			return false, fmt.Errorf("string type assertion failed for data field %q", fieldName)
+		}
+
 		role, err := getRoleEntry(ctx, req.Storage, roleName)
 		if err != nil {
 			return false, err
@@ -178,7 +207,7 @@ func (b *GitlabBackend) pathRoleExistenceCheck(fieldName string) framework.Exist
 	}
 }
 
-// set up the paths for the roles within vault
+// Set up the paths for the roles within vault.
 func pathRole(b *GitlabBackend) []*framework.Path {
 	paths := []*framework.Path{
 		{
@@ -213,13 +242,14 @@ func pathRoleList(b *GitlabBackend) []*framework.Path {
 	// Paths for listing role sets
 	paths := []*framework.Path{
 		{
-			Pattern: fmt.Sprintf("%s?/?", pathPatternRoles),
+			Pattern: pathPatternRoles + "?/?",
 			Callbacks: map[logical.Operation]framework.OperationFunc{
 				logical.ListOperation: b.pathRoleList,
 			},
 			HelpSynopsis: pathListRoleHelpSyn,
 		},
 	}
+
 	return paths
 }
 

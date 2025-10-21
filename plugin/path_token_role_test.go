@@ -22,19 +22,24 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
+//nolint:funlen
 func TestAccRoleToken(t *testing.T) {
+	t.Parallel()
 
 	if testing.Short() {
 		t.Skip("skipping integration test (short)")
 	}
+
 	req, backend := newGitlabAccEnv(t)
 
 	ID := envAsInt("GITLAB_PROJECT_ID", 1)
 
 	t.Run("successfully create", func(t *testing.T) {
+		t.Parallel()
+
 		data := map[string]interface{}{
 			"id":     ID,
 			"name":   "vault-role-test",
@@ -56,6 +61,8 @@ func TestAccRoleToken(t *testing.T) {
 	})
 
 	t.Run("successfully create token for role with access level", func(t *testing.T) {
+		t.Parallel()
+
 		data := map[string]interface{}{
 			"id":           ID,
 			"name":         "vault-role-test-access-level",
@@ -77,15 +84,18 @@ func TestAccRoleToken(t *testing.T) {
 	})
 
 	t.Run("non-existing role", func(t *testing.T) {
+		t.Parallel()
+
 		resp, err := testIssueRoleToken(t, backend, req, "non-existing", nil)
 		require.NoError(t, err)
 		require.True(t, resp.IsError())
 	})
-
 }
 
-// create the token given role name
+// Create the token given a role name.
 func testIssueRoleToken(t *testing.T, b logical.Backend, req *logical.Request, roleName string, data map[string]interface{}) (*logical.Response, error) {
+	t.Helper()
+
 	req.Operation = logical.CreateOperation
 	req.Path = fmt.Sprintf("%s/%s", pathPatternToken, roleName)
 	req.Data = data

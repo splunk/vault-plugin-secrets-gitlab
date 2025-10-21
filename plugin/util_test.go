@@ -15,6 +15,7 @@
 package gitlabtoken
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/hashicorp/go-multierror"
@@ -42,9 +43,11 @@ func TestValidateScopes(t *testing.T) {
 		err := validateScopes(invalidScopes)
 		require.Error(t, err, "expecting error")
 
-		if merr, ok := err.(*multierror.Error); ok {
+		var merr *multierror.Error
+		if errors.As(err, &merr) {
 			assert.Len(t, merr.Errors, 2, "expecting %d errors, got %s", 2, len(merr.Errors))
 		}
+
 		assert.Contains(t, err.Error(), "scope 'something' is not allowed")
 	})
 }

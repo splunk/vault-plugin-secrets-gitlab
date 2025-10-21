@@ -26,11 +26,13 @@ import (
 var errAccessLevelInvalid = errors.New("invalid access level")
 var errAccessLevelNotPermitted = errors.New("access level not permitted")
 
+// TokenStorageEntry represents the token metadata stored in vault.
 type TokenStorageEntry struct {
 	BaseTokenStorage BaseTokenStorageEntry
 	ExpiresAt        *time.Time `json:"expires_at" structs:"expires_at" mapstructure:"expires_at,omitempty"`
 }
 
+// BaseTokenStorageEntry represents the base token metadata stored in vault.
 type BaseTokenStorageEntry struct {
 	// `json:"" structs:"" mapstructure:""`
 	ID          int      `json:"id" structs:"id" mapstructure:"id"`
@@ -41,7 +43,9 @@ type BaseTokenStorageEntry struct {
 
 func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration, allowOwnerLevel bool) error {
 	var err *multierror.Error
-	if e := tokenStorage.BaseTokenStorage.assertValid(allowOwnerLevel); e != nil {
+
+	e := tokenStorage.BaseTokenStorage.assertValid(allowOwnerLevel)
+	if e != nil {
 		err = multierror.Append(err, e)
 	}
 
@@ -62,13 +66,18 @@ func (baseTokenStorage *BaseTokenStorageEntry) assertValid(allowOwnerLevel bool)
 	if baseTokenStorage.ID <= 0 {
 		err = multierror.Append(err, errors.New("id is empty or invalid"))
 	}
+
 	if baseTokenStorage.Name == "" {
 		err = multierror.Append(err, errors.New("name is empty"))
 	}
+
 	if len(baseTokenStorage.Scopes) == 0 {
 		err = multierror.Append(err, errors.New("scopes are empty"))
-	} else if e := validateScopes(baseTokenStorage.Scopes); e != nil {
-		err = multierror.Append(err, e)
+	} else {
+		e := validateScopes(baseTokenStorage.Scopes)
+		if e != nil {
+			err = multierror.Append(err, e)
+		}
 	}
 
 	// check validity of access level. allowed values are:
@@ -91,23 +100,27 @@ func (baseTokenStorage *BaseTokenStorageEntry) assertValid(allowOwnerLevel bool)
 
 func (tokenStorage *TokenStorageEntry) retrieve(data *framework.FieldData) {
 	tokenStorage.BaseTokenStorage.retrieve(data)
+
 	if expiresAtRaw, ok := data.GetOk("expires_at"); ok {
-		t := expiresAtRaw.(time.Time)
+		t, _ := expiresAtRaw.(time.Time)
 		tokenStorage.ExpiresAt = &t
 	}
 }
 
 func (baseTokenStorage *BaseTokenStorageEntry) retrieve(data *framework.FieldData) {
 	if idRaw, ok := data.GetOk("id"); ok {
-		baseTokenStorage.ID = idRaw.(int)
+		baseTokenStorage.ID, _ = idRaw.(int)
 	}
+
 	if nameRaw, ok := data.GetOk("name"); ok {
-		baseTokenStorage.Name = nameRaw.(string)
+		baseTokenStorage.Name, _ = nameRaw.(string)
 	}
+
 	if scopesRaw, ok := data.GetOk("scopes"); ok {
-		baseTokenStorage.Scopes = scopesRaw.([]string)
+		baseTokenStorage.Scopes, _ = scopesRaw.([]string)
 	}
+
 	if accessLevelRaw, ok := data.GetOk("access_level"); ok {
-		baseTokenStorage.AccessLevel = accessLevelRaw.(int)
+		baseTokenStorage.AccessLevel, _ = accessLevelRaw.(int)
 	}
 }
