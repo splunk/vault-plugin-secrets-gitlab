@@ -14,8 +14,9 @@
 
 package gitlabtoken
 
-import "github.com/xanzy/go-gitlab"
+import gitlab "gitlab.com/gitlab-org/api/client-go"
 
+// PAT stands for Project Access Token.
 type PAT = gitlab.ProjectAccessToken
 
 const (
@@ -23,6 +24,7 @@ const (
 	pathPatternToken  = "token"
 	pathPatternRoles  = "roles"
 
+	//nolint:godot
 	// accessLevelGuest      = 10
 	// accessLevelReporter   = 20
 	// accessLevelDeveloper  = 30

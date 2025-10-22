@@ -16,6 +16,7 @@ package gitlabtoken
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -36,7 +37,11 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 		return logical.ErrorResponse("failed to obtain gitlab client - %s", err.Error()), nil
 	}
 
-	roleName := data.Get("role_name").(string)
+	roleName, ok := data.Get("role_name").(string)
+	if !ok {
+		return nil, errors.New("string type assertion failed for data field 'role_name'")
+	}
+
 	// get the role by name
 	role, err := getRoleEntry(ctx, req.Storage, roleName)
 	if role == nil || err != nil {
@@ -45,6 +50,7 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 
 	expiresAt := time.Now().UTC().Add(role.TokenTTL)
 	b.Logger().Debug("generating access token for a role", "role_name", role.RoleName, "expires_at", expiresAt)
+
 	pat, err := gc.CreateProjectAccessToken(&role.BaseTokenStorage, &expiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
@@ -53,7 +59,7 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 	return &logical.Response{Data: tokenDetails(pat)}, nil
 }
 
-// set up the paths for the roles within vault
+// Set up the paths for the roles within vault.
 func pathRoleToken(b *GitlabBackend) []*framework.Path {
 	paths := []*framework.Path{
 		{
@@ -79,6 +85,7 @@ func pathRoleToken(b *GitlabBackend) []*framework.Path {
 	return paths
 }
 
+//nolint:gosec
 const pathRoleTokenHelpSyn = `Generate a project access token for a given project based on a predefined role`
 const pathRoleTokenHelpDesc = `
 This path allows you to generate a project access token based on a predefined role. You must create a role beforehand in /roles/ path,

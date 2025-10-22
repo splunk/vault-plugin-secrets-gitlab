@@ -213,7 +213,7 @@ Apache License 2.0
 ========================================================================
 The following components are provided under the Apache License 2.0. See project link for details.
 
-   (Apache License 2.0) go-gitlab (https://github.com/xanzy/go-gitlab/blob/master/LICENSE)
+   (Apache License 2.0) go-gitlab (https://gitlab.com/gitlab-org/api/client-go/-/blob/main/LICENSE)
 
 ========================================================================
 MIT licenses

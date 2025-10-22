@@ -23,18 +23,24 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
+//nolint:funlen
 func TestAccToken(t *testing.T) {
+	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping integration test (short)")
 	}
+
 	req, backend := newGitlabAccEnv(t)
 
 	ID := envAsInt("GITLAB_PROJECT_ID", 1)
 
 	t.Run("successfully create", func(t *testing.T) {
+		t.Parallel()
+
 		d := map[string]interface{}{
 			"id":     ID,
 			"name":   "vault-test",
@@ -42,7 +48,7 @@ func TestAccToken(t *testing.T) {
 		}
 		resp, err := testIssueToken(t, backend, req, d)
 		require.NoError(t, err)
-		fmt.Println(resp.Error())
+		fmt.Println(resp.Error()) //nolint:forbidigo
 		require.False(t, resp.IsError())
 
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
@@ -51,6 +57,8 @@ func TestAccToken(t *testing.T) {
 	})
 
 	t.Run("successfully create with expiration", func(t *testing.T) {
+		t.Parallel()
+
 		e := time.Now().Add(time.Hour * 24)
 		d := map[string]interface{}{
 			"id":         ID,
@@ -64,10 +72,13 @@ func TestAccToken(t *testing.T) {
 
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
-		assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
+		expiresAt, _ := resp.Data["expires_at"].(time.Time)
+		assert.Contains(t, expiresAt, e.Format("2006-01-02"))
 	})
 
 	t.Run("successfully create with access level", func(t *testing.T) {
+		t.Parallel()
+
 		e := time.Now().Add(time.Hour * 24)
 		d := map[string]interface{}{
 			"id":           ID,
@@ -83,14 +94,15 @@ func TestAccToken(t *testing.T) {
 		assert.NotEmpty(t, resp.Data["token"], "no token returned")
 		assert.NotEmpty(t, resp.Data["id"], "no id returned")
 		assert.NotEmpty(t, resp.Data["access_level"], "no access_level returned")
-		assert.Contains(t, resp.Data["expires_at"].(time.Time).String(), e.Format("2006-01-02"))
+		expiresAt, _ := resp.Data["expires_at"].(time.Time)
+		assert.Contains(t, expiresAt.String(), e.Format("2006-01-02"))
 
 		assert.Equal(t, gitlab.AccessLevelValue(30), resp.Data["access_level"])
-
 	})
 
 	t.Run("validation failure", func(t *testing.T) {
 		t.Parallel()
+
 		d := map[string]interface{}{
 			"id": -1,
 		}
@@ -123,11 +135,12 @@ func TestAccToken(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, resp.IsError())
 	})
-
 }
 
-// create the token given the parameters
+// Create the token given the parameters.
 func testIssueToken(t *testing.T, b logical.Backend, req *logical.Request, data map[string]interface{}) (*logical.Response, error) {
+	t.Helper()
+
 	req.Operation = logical.CreateOperation
 	req.Path = pathPatternToken
 	req.Data = data

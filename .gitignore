@@ -2,8 +2,7 @@ vault-plugin-secrets-gitlab
 plugins/
 .vscode/
 dist/
-coverage.*
-coverage_*
+coverage/
 .tools/
 .go/
 .idea/

@@ -16,6 +16,7 @@ package gitlabtoken
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -23,16 +24,18 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
+// NoTTLWarning returns a warning message for missing TTL for the provided ttl flag name.
 func NoTTLWarning(s string) string {
-	return fmt.Sprintf("%s is not set. Token can be generated with expiration 'never'", s)
+	return s + "is not set. Token can be generated with expiration 'never'"
 }
 
+// LT24HourTTLWarning returns a warning message for the provided TTL flag name if the TTL is < 24 hrs.
 func LT24HourTTLWarning(s string) string {
 	return fmt.Sprintf("%[1]s is set with less than 24 hours. With current token expiry limitation, this %[1]s is ignored", s)
 }
 
-// schema for the configuring Gitlab token plugin, this will map the fields coming in from the
-// vault request field map
+// Schema for the configuring Gitlab token plugin, this will map the fields coming in from the
+// vault request field map.
 var configSchema = map[string]*framework.FieldSchema{
 	"base_url": {
 		Type:        framework.TypeString,
@@ -64,11 +67,12 @@ func configDetail(config *ConfigStorageEntry) map[string]interface{} {
 	}
 }
 
-func (b *GitlabBackend) pathConfigRead(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *GitlabBackend) pathConfigRead(ctx context.Context, req *logical.Request, _ *framework.FieldData) (*logical.Response, error) {
 	config, err := getConfig(ctx, req.Storage)
 	if err != nil {
 		return nil, err
 	}
+
 	if config == nil {
 		return nil, nil
 	}
@@ -78,6 +82,7 @@ func (b *GitlabBackend) pathConfigRead(ctx context.Context, req *logical.Request
 	}, nil
 }
 
+//nolint:gocyclo,cyclop,funlen
 func (b *GitlabBackend) pathConfigWrite(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	warnings := []string{}
 
@@ -85,29 +90,46 @@ func (b *GitlabBackend) pathConfigWrite(ctx context.Context, req *logical.Reques
 	if err != nil {
 		return nil, err
 	}
+
 	if config == nil {
 		config = &ConfigStorageEntry{}
 	}
 
 	baseURL, ok := data.GetOk("base_url")
 	if ok {
-		config.BaseURL = baseURL.(string)
+		var valid bool
+
+		config.BaseURL, valid = baseURL.(string)
+		if !valid {
+			return nil, errors.New("string type assertion failed for data field 'base_url'")
+		}
 	} else if config.BaseURL == "" {
-		config.BaseURL = configSchema["base_url"].Default.(string)
+		config.BaseURL, ok = configSchema["base_url"].Default.(string)
+		if !ok {
+			return nil, errors.New("string type assertion failed for data field 'base_url'")
+		}
 	}
 
 	if token, ok := data.GetOk("token"); ok {
-		config.Token = token.(string)
+		config.Token, ok = token.(string)
+		if !ok {
+			return nil, errors.New("string type assertion failed for data field 'token'")
+		}
 	}
 
 	maxTTLRaw, ok := data.GetOk("max_ttl")
-	if ok && maxTTLRaw.(int) > 0 {
+	if ok {
+		maxTTL, valid := maxTTLRaw.(int)
+		if !valid {
+			return nil, errors.New("int type assertion failed for data field 'max_ttl'")
+		}
+
 		// Until Gitlab implements granular token expiry.
 		// bounce anything less than 24 hours
-		if maxTTLRaw.(int) < (24 * 3600) {
+		if maxTTL > 0 && maxTTL < (24*3600) {
 			warnings = append(warnings, LT24HourTTLWarning("max_ttl"))
-		} else {
-			config.MaxTTL = time.Duration(maxTTLRaw.(int)) * time.Second
+		} else if maxTTL > 0 {
+			config.MaxTTL = time.Duration(maxTTL) * time.Second
 		}
 	}
 
@@ -117,7 +139,12 @@ func (b *GitlabBackend) pathConfigWrite(ctx context.Context, req *logical.Reques
 
 	allowOwnerLevel, ok := data.GetOk("allow_owner_level")
 	if ok {
-		config.AllowOwnerLevel = allowOwnerLevel.(bool)
+		var valid bool
+
+		config.AllowOwnerLevel, valid = allowOwnerLevel.(bool)
+		if !valid {
+			return nil, errors.New("bool type assertion failed for data field 'allow_owner_level'")
+		}
 	}
 
 	// maxTTLRaw, ok := data.GetOk("max_ttl")
@@ -132,7 +159,8 @@ func (b *GitlabBackend) pathConfigWrite(ctx context.Context, req *logical.Reques
 		return nil, err
 	}
 
-	if err := req.Storage.Put(ctx, entry); err != nil {
+	err = req.Storage.Put(ctx, entry)
+	if err != nil {
 		return nil, err
 	}
 

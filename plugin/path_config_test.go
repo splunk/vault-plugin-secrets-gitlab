@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:funlen
 func TestConfig(t *testing.T) {
 	t.Parallel()
 
@@ -122,6 +123,7 @@ func TestConfig(t *testing.T) {
 
 		conf["allow_owner_level"] = false
 		expected["allow_owner_level"] = false
+
 		testConfigUpdate(t, backend, reqStorage, conf)
 		testConfigRead(t, backend, reqStorage, expected)
 	})
@@ -129,6 +131,7 @@ func TestConfig(t *testing.T) {
 
 func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[string]interface{}, warnings ...string) {
 	t.Helper()
+
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.UpdateOperation,
 		Path:      pathPatternConfig,
@@ -146,6 +149,7 @@ func testConfigUpdate(t *testing.T, b logical.Backend, s logical.Storage, d map[
 
 func testConfigRead(t *testing.T, b logical.Backend, s logical.Storage, expected map[string]interface{}) {
 	t.Helper()
+
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.ReadOperation,
 		Path:      pathPatternConfig,
@@ -159,7 +163,7 @@ func testConfigRead(t *testing.T, b logical.Backend, s logical.Storage, expected
 	}
 
 	require.False(t, resp.IsError())
-	assert.Equal(t, len(expected), len(resp.Data), "read data mismatch")
+	assert.Len(t, resp.Data, len(expected), "read data mismatch")
 	assert.Equal(t, expected, resp.Data, "expected %v, actual: %v", expected, resp.Data)
 
 	if t.Failed() {

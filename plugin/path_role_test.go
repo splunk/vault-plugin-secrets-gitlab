@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:funlen
 func TestPathRole(t *testing.T) {
 	a := assert.New(t)
 	backend, storage := getTestBackend(t, false)
@@ -41,6 +42,7 @@ func TestPathRole(t *testing.T) {
 		"scopes":       []string{"api", "read_repository"},
 		"access_level": 30,
 	}
+
 	t.Run("successful", func(t *testing.T) {
 		roleName := "successful"
 		resp, err := testRoleRead(t, backend, storage, roleName)
@@ -162,6 +164,7 @@ func TestPathRoleWithAllowOwnerAccessLevel(t *testing.T) {
 
 func TestPathRoleList(t *testing.T) {
 	t.Parallel()
+
 	a := assert.New(t)
 
 	backend, storage := getTestBackend(t, false)
@@ -170,6 +173,7 @@ func TestPathRoleList(t *testing.T) {
 		"token":    "gibberish",
 	}
 	testConfigUpdate(t, backend, storage, conf)
+
 	data := map[string]interface{}{
 		"id":     1,
 		"name":   "role-test",
@@ -189,6 +193,7 @@ func TestPathRoleList(t *testing.T) {
 
 	roleName1 := "test_list_role1"
 	roleName2 := "test_list_role2"
+
 	mustRoleCreate(t, backend, storage, roleName1, data)
 	mustRoleCreate(t, backend, storage, roleName2, data)
 
@@ -197,7 +202,8 @@ func TestPathRoleList(t *testing.T) {
 	require.False(t, resp.IsError())
 	err = mapstructure.Decode(resp.Data, &listResp)
 	require.NoError(t, err)
-	returnedRoles := listResp["keys"].([]string)
+
+	returnedRoles, _ := listResp["keys"].([]string)
 	a.Len(returnedRoles, 2, "incorrect number of roles")
 	a.Equal(roleName1, returnedRoles[0], "incorrect path set")
 	a.Equal(roleName2, returnedRoles[1], "incorrect path set")
@@ -208,19 +214,22 @@ func TestPathRoleList(t *testing.T) {
 	require.False(t, resp.IsError())
 	err = mapstructure.Decode(resp.Data, &listResp)
 	require.NoError(t, err)
-	returnedRoles = listResp["keys"].([]string)
+
+	returnedRoles, _ = listResp["keys"].([]string)
 	a.Len(returnedRoles, 1, "incorrect number of roles")
 	a.Equal(roleName1, returnedRoles[0], "incorrect path set")
 }
 
 func testRoleCreate(t *testing.T, b logical.Backend, s logical.Storage, roleName string, data map[string]interface{}) (*logical.Response, error) {
 	t.Helper()
+
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.CreateOperation,
 		Path:      fmt.Sprintf("%s/%s", pathPatternRoles, roleName),
 		Data:      data,
 		Storage:   s,
 	})
+
 	return resp, err
 }
 
@@ -233,6 +242,7 @@ func mustRoleCreate(t *testing.T, b logical.Backend, s logical.Storage, roleName
 
 func testRoleRead(t *testing.T, b logical.Backend, s logical.Storage, roleName string) (*logical.Response, error) {
 	t.Helper()
+
 	data := map[string]interface{}{
 		"role_name": roleName,
 	}
@@ -243,11 +253,13 @@ func testRoleRead(t *testing.T, b logical.Backend, s logical.Storage, roleName s
 		Data:      data,
 		Storage:   s,
 	})
+
 	return resp, err
 }
 
 func testRoleDelete(t *testing.T, b logical.Backend, s logical.Storage, roleName string) (*logical.Response, error) {
 	t.Helper()
+
 	data := map[string]interface{}{
 		"role_name": roleName,
 	}
@@ -258,10 +270,13 @@ func testRoleDelete(t *testing.T, b logical.Backend, s logical.Storage, roleName
 		Data:      data,
 		Storage:   s,
 	})
+
 	return resp, err
 }
 
 func mustRoleDelete(t *testing.T, b logical.Backend, s logical.Storage, roleName string) {
+	t.Helper()
+
 	resp, err := testRoleDelete(t, b, s, roleName)
 	require.NoError(t, err)
 	require.Nil(t, resp)
@@ -269,10 +284,12 @@ func mustRoleDelete(t *testing.T, b logical.Backend, s logical.Storage, roleName
 
 func testRoleList(t *testing.T, b logical.Backend, s logical.Storage) (*logical.Response, error) {
 	t.Helper()
+
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Operation: logical.ListOperation,
 		Path:      pathPatternRoles,
 		Storage:   s,
 	})
+
 	return resp, err
 }

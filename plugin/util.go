@@ -35,6 +35,7 @@ func validateScopes(scopes []string) error {
 			err = multierror.Append(err, fmt.Errorf("scope '%s' is not allowed", scope))
 		}
 	}
+
 	return err.ErrorOrNil()
 }
 
@@ -43,14 +44,17 @@ func envOrDefault(key, d string) string {
 	if env == "" {
 		return d
 	}
+
 	return env
 }
 
-func envAsInt(key string, d int) int {
+func envAsInt(key string, def int) int {
 	v := envOrDefault(key, "")
-	if val, err := strconv.Atoi(v); err == nil {
+
+	val, err := strconv.Atoi(v)
+	if err == nil {
 		return val
 	}
 
-	return d
+	return def
 }

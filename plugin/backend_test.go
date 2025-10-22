@@ -22,9 +22,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// getTestBackend returns the mocked out backend for testing
+// getTestBackend returns the mocked out backend for testing.
+//
+//nolint:ireturn
 func getTestBackend(t *testing.T, mockGitlab bool) (logical.Backend, logical.Storage) {
 	t.Helper()
+
 	config := logical.TestBackendConfig()
 	config.StorageView = &logical.InmemStorage{}
 
@@ -32,12 +35,14 @@ func getTestBackend(t *testing.T, mockGitlab bool) (logical.Backend, logical.Sto
 	require.NoError(t, err, "unable to create backend")
 
 	if mockGitlab {
-		b.(*GitlabBackend).client = &mockGitlabClient{}
+		gb, _ := b.(*GitlabBackend)
+		gb.client = &mockGitlabClient{}
 	}
 
 	return b, config.StorageView
 }
 
+//nolint:ireturn
 func newGitlabAccEnv(t *testing.T) (*logical.Request, logical.Backend) {
 	t.Helper()
 
@@ -53,5 +58,6 @@ func newGitlabAccEnv(t *testing.T) (*logical.Request, logical.Backend) {
 	req := &logical.Request{
 		Storage: storage,
 	}
+
 	return req, backend
 }
