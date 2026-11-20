@@ -26,6 +26,13 @@ import (
 var errAccessLevelInvalid = errors.New("invalid access level")
 var errAccessLevelNotPermitted = errors.New("access level not permitted")
 
+// Supported token target kinds; omitted kinds retain the project default.
+const (
+	TokenTypeProject = "project"
+	TokenTypeGroup   = "group"
+	tokenTypeField   = "token_type"
+)
+
 // TokenStorageEntry represents the token metadata stored in vault.
 type TokenStorageEntry struct {
 	BaseTokenStorage BaseTokenStorageEntry
@@ -39,6 +46,16 @@ type BaseTokenStorageEntry struct {
 	Name        string   `json:"name" structs:"name" mapstructure:"name"`
 	Scopes      []string `json:"scopes" structs:"scopes" mapstructure:"scopes"`
 	AccessLevel int      `json:"access_level" structs:"access_level" mapstructure:"access_level,omitempty"`
+	TokenType   string   `json:"token_type,omitempty" structs:"token_type" mapstructure:"token_type,omitempty"`
+}
+
+// tokenType preserves project behavior for roles stored before target kinds existed.
+func (baseTokenStorage *BaseTokenStorageEntry) tokenType() string {
+	if baseTokenStorage.TokenType == "" {
+		return TokenTypeProject
+	}
+
+	return baseTokenStorage.TokenType
 }
 
 func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration, allowOwnerLevel bool) error {
@@ -63,6 +80,10 @@ func (tokenStorage *TokenStorageEntry) assertValid(maxTTL time.Duration, allowOw
 
 func (baseTokenStorage *BaseTokenStorageEntry) assertValid(allowOwnerLevel bool) error {
 	var err *multierror.Error
+	if kind := baseTokenStorage.tokenType(); kind != TokenTypeProject && kind != TokenTypeGroup {
+		err = multierror.Append(err, fmt.Errorf("invalid token_type %q: expected project or group", kind))
+	}
+
 	if baseTokenStorage.ID <= 0 {
 		err = multierror.Append(err, errors.New("id is empty or invalid"))
 	}
@@ -108,6 +129,10 @@ func (tokenStorage *TokenStorageEntry) retrieve(data *framework.FieldData) {
 }
 
 func (baseTokenStorage *BaseTokenStorageEntry) retrieve(data *framework.FieldData) {
+	if kind, ok := data.GetOk(tokenTypeField); ok {
+		baseTokenStorage.TokenType, _ = kind.(string)
+	}
+
 	if idRaw, ok := data.GetOk("id"); ok {
 		baseTokenStorage.ID, _ = idRaw.(int)
 	}

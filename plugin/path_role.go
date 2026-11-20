@@ -27,17 +27,22 @@ import (
 // Schema for the role, this will map the fields coming in from the
 // vault request field map.
 var roleSchema = map[string]*framework.FieldSchema{
+	tokenTypeField: {
+		Type:        framework.TypeString,
+		Description: "Token target: project (default) or group",
+		Default:     TokenTypeProject,
+	},
 	"role_name": {
 		Type:        framework.TypeString,
 		Description: "Role name",
 	},
 	"id": {
 		Type:        framework.TypeInt,
-		Description: "Project ID to create a project access token for",
+		Description: "Project or group ID to create an access token for",
 	},
 	"name": {
 		Type:        framework.TypeString,
-		Description: "The name of the project access token",
+		Description: "The name of the project or group access token",
 	},
 	"scopes": {
 		Type:        framework.TypeCommaStringSlice,
@@ -50,7 +55,7 @@ var roleSchema = map[string]*framework.FieldSchema{
 	},
 	"access_level": {
 		Type:        framework.TypeInt,
-		Description: "access level of project access token",
+		Description: "access level of project or group access token",
 	},
 }
 
@@ -62,6 +67,7 @@ func roleDetail(role *RoleStorageEntry) map[string]interface{} {
 		"scopes":       role.BaseTokenStorage.Scopes,
 		"access_level": role.BaseTokenStorage.AccessLevel,
 		"token_ttl":    int64(role.TokenTTL / time.Second),
+		tokenTypeField: role.BaseTokenStorage.tokenType(),
 	}
 }
 
@@ -253,11 +259,11 @@ func pathRoleList(b *GitlabBackend) []*framework.Path {
 	return paths
 }
 
-const pathRoleHelpSyn = `Create a role with parameters that are used to generate a project access token.`
+const pathRoleHelpSyn = `Create a role with parameters that are used to generate a project or group access token.`
 const pathRoleHelpDesc = `
-This path allows you to create a role whose parameters will be used to generate a project access token. 
-You must supply a project id to generate a token for, a name, which will be used as a name field in Gitlab, 
-and scopes for the generated project access token.
+This path allows you to create a role whose parameters will be used to generate a project or group access token.
+You must supply a project or group id to generate a token for, a name, which will be used as a name field in Gitlab,
+and scopes for the generated project or group access token.
 `
 
 var roleExamples = []framework.RequestExample{

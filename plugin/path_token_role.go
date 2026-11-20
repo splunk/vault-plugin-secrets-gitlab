@@ -51,7 +51,7 @@ func (b *GitlabBackend) pathRoleTokenCreate(ctx context.Context, req *logical.Re
 	expiresAt := time.Now().UTC().Add(role.TokenTTL)
 	b.Logger().Debug("generating access token for a role", "role_name", role.RoleName, "expires_at", expiresAt)
 
-	pat, err := gc.CreateProjectAccessToken(&role.BaseTokenStorage, &expiresAt)
+	pat, err := gc.CreateAccessToken(&role.BaseTokenStorage, &expiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
@@ -70,7 +70,7 @@ func pathRoleToken(b *GitlabBackend) []*framework.Path {
 				logical.CreateOperation: &framework.PathOperation{
 
 					Callback: b.pathRoleTokenCreate,
-					Summary:  "Create a project access token based on a predefined role",
+					Summary:  "Create a project or group access token based on a predefined role",
 					Examples: roleTokenExamples,
 				},
 				logical.UpdateOperation: &framework.PathOperation{
@@ -86,15 +86,15 @@ func pathRoleToken(b *GitlabBackend) []*framework.Path {
 }
 
 //nolint:gosec
-const pathRoleTokenHelpSyn = `Generate a project access token for a given project based on a predefined role`
+const pathRoleTokenHelpSyn = `Generate a project or group access token for a given project based on a predefined role`
 const pathRoleTokenHelpDesc = `
-This path allows you to generate a project access token based on a predefined role. You must create a role beforehand in /roles/ path,
-whose parameters are used to generate a project access token.
+This path allows you to generate a project or group access token based on a predefined role. You must create a role beforehand in /roles/ path,
+whose parameters are used to generate a project or group access token.
 `
 
 var roleTokenExamples = []framework.RequestExample{
 	{
-		Description: "Create a project access token based on a predefined role",
+		Description: "Create a project or group access token based on a predefined role",
 		Data: map[string]interface{}{
 			"role_name": "MyRole",
 		},

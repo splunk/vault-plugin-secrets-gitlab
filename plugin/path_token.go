@@ -25,13 +25,18 @@ import (
 // Schema for the token. This will map the fields coming in from the
 // vault request field map.
 var accessTokenSchema = map[string]*framework.FieldSchema{
+	tokenTypeField: {
+		Type:        framework.TypeString,
+		Description: "Token target: project (default) or group",
+		Default:     TokenTypeProject,
+	},
 	"id": {
 		Type:        framework.TypeInt,
-		Description: "Project ID to create a project access token for",
+		Description: "Project or group ID to create an access token for",
 	},
 	"name": {
 		Type:        framework.TypeString,
-		Description: "The name of the project access token",
+		Description: "The name of the project or group access token",
 	},
 	"scopes": {
 		Type:        framework.TypeCommaStringSlice,
@@ -43,7 +48,7 @@ var accessTokenSchema = map[string]*framework.FieldSchema{
 	},
 	"access_level": {
 		Type:        framework.TypeInt,
-		Description: "access level of project access token",
+		Description: "access level of project or group access token",
 	},
 }
 
@@ -89,7 +94,7 @@ func (b *GitlabBackend) pathTokenCreate(ctx context.Context, req *logical.Reques
 	b.Logger().Debug("generating access token", "id", tokenStorage.BaseTokenStorage.ID,
 		"name", tokenStorage.BaseTokenStorage.Name, "scopes", tokenStorage.BaseTokenStorage.Scopes)
 
-	pat, err := gc.CreateProjectAccessToken(&tokenStorage.BaseTokenStorage, tokenStorage.ExpiresAt)
+	pat, err := gc.CreateAccessToken(&tokenStorage.BaseTokenStorage, tokenStorage.ExpiresAt)
 	if err != nil {
 		return logical.ErrorResponse("Failed to create a token - " + err.Error()), nil
 	}
@@ -117,7 +122,7 @@ func pathToken(b *GitlabBackend) []*framework.Path {
 				logical.CreateOperation: &framework.PathOperation{
 
 					Callback: b.pathTokenCreate,
-					Summary:  "Create a project access token",
+					Summary:  "Create a project or group access token",
 					Examples: tokenExamples,
 				},
 				logical.UpdateOperation: &framework.PathOperation{
@@ -133,15 +138,15 @@ func pathToken(b *GitlabBackend) []*framework.Path {
 }
 
 //nolint:gosec
-const pathTokenHelpSyn = `Generate a project access token for a given project with token name, scopes.`
+const pathTokenHelpSyn = `Generate a project or group access token for a given project with token name, scopes.`
 const pathTokenHelpDesc = `
-This path allows you to generate a project access token. You must supply a project id to generate a token for, a name, which 
-will be used as a name field in Gitlab, and scopes for the generated project access token.
+This path allows you to generate a project or group access token. You must supply a project or group id to generate a token for, a name, which
+will be used as a name field in Gitlab, and scopes for the generated project or group access token.
 `
 
 var tokenExamples = []framework.RequestExample{
 	{
-		Description: "Create a project access token",
+		Description: "Create a project or group access token",
 		Data: map[string]interface{}{
 			"id":     1,
 			"name":   "MyProjectAccessToken",

@@ -1,0 +1,28 @@
+[
+  {
+    "path": "roles/group-reader",
+    "data": {
+      "access_level": 20,
+      "id": 500,
+      "name": "group",
+      "scopes": [
+        "read_api"
+      ],
+      "token_ttl": "24h",
+      "token_type": "group"
+    }
+  },
+  {
+    "path": "roles/project-reader",
+    "data": {
+      "access_level": 20,
+      "id": 500,
+      "name": "project",
+      "scopes": [
+        "read_api"
+      ],
+      "token_ttl": "24h",
+      "token_type": "project"
+    }
+  }
+]

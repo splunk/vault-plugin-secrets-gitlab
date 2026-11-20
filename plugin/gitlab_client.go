@@ -29,7 +29,7 @@ const (
 // Client makes API calls to GitLab.
 type Client interface {
 	// ListProjectAccessToken(int) ([]*PAT, error)
-	CreateProjectAccessToken(e *BaseTokenStorageEntry, t *time.Time) (*PAT, error)
+	CreateAccessToken(e *BaseTokenStorageEntry, t *time.Time) (*PAT, error)
 	// RevokeProjectAccessToken(*BaseTokenStorageEntry) error
 	Valid() bool
 }
@@ -78,6 +78,7 @@ func (gc *GitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageE
 		Name:   &tokenStorage.Name,
 		Scopes: &tokenStorage.Scopes,
 	}
+
 	if expiresAt != nil {
 		expiration := gitlab.ISOTime(*expiresAt)
 		opt.ExpiresAt = &expiration
@@ -98,3 +99,39 @@ func (gc *GitlabClient) CreateProjectAccessToken(tokenStorage *BaseTokenStorageE
 // func (gc *gitlabClient) RevokeProjectAccessToken(tokenStorage *BaseTokenStorageEntry) error {
 // 	return nil
 // }
+
+// CreateAccessToken selects the GitLab API for the validated token target kind.
+func (gc *GitlabClient) CreateAccessToken(tokenStorage *BaseTokenStorageEntry, expiresAt *time.Time) (*PAT, error) {
+	switch tokenStorage.tokenType() {
+	case TokenTypeProject:
+		return gc.CreateProjectAccessToken(tokenStorage, expiresAt)
+	case TokenTypeGroup:
+		return gc.CreateGroupAccessToken(tokenStorage, expiresAt)
+	default:
+		return nil, fmt.Errorf("invalid token_type %q: expected project or group", tokenStorage.TokenType)
+	}
+}
+
+// CreateGroupAccessToken creates a group token with the same native expiry semantics as project tokens.
+func (gc *GitlabClient) CreateGroupAccessToken(tokenStorage *BaseTokenStorageEntry, expiresAt *time.Time) (*PAT, error) {
+	opt := gitlab.CreateGroupAccessTokenOptions{
+		Name:   &tokenStorage.Name,
+		Scopes: &tokenStorage.Scopes,
+	}
+
+	if expiresAt != nil {
+		expiration := gitlab.ISOTime(*expiresAt)
+		opt.ExpiresAt = &expiration
+	}
+
+	if tokenStorage.AccessLevel != 0 {
+		opt.AccessLevel = (*gitlab.AccessLevelValue)(&tokenStorage.AccessLevel)
+	}
+
+	token, _, err := gc.client.GroupAccessTokens.CreateGroupAccessToken(tokenStorage.ID, &opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*PAT)(token), nil
+}

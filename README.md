@@ -1,11 +1,12 @@
-# Vault Plugin for Gitlab Project Access Token
+# Vault Plugin for GitLab Access Tokens
 
 [![build-status-badge]][actions-page]
 [![go-report-card-badge]][go-report-card]
 [![codecov-badge]][codecov]
 ![go-version-badge]
 
-This is a backend plugin to be used with Vault. This plugin generates [Gitlab Project Access Tokens][pat]
+This Vault backend generates [GitLab project access tokens][pat] and
+[group access tokens](https://docs.gitlab.com/user/group/settings/group_access_tokens/).
 
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
@@ -21,6 +22,8 @@ This is a backend plugin to be used with Vault. This plugin generates [Gitlab Pr
 - You need **14.1** or later to have access level
 - Self-managed instances on Free and above. Or, GitLab SaaS Premium and above
 - a token of a user with maintainer or higher permission in a project
+- Group tokens require a GitLab instance supporting the group access-token API
+  and a configured credential with Owner access to the target group.
 
 - Lifting API rate limit for the user whose token will be used in this plugin to generate/revoke project access tokens. Admin of self-hosted can check [this doc][lift rate limit] to allow specific users to bypass authenticated request rate limiting. For SaaS Gitlab, I have not confirmed how to lift API limit yet.
 
@@ -77,6 +80,32 @@ scopes        [read_api read_repository]
 token         REDACTED_TOKEN
 expires_at    2021-09-13
 ```
+
+### Group access tokens
+
+Set `token_type=group` and use the target GitLab group ID as `id`, either directly
+or in a stored role:
+
+```shell
+vault write gitlab/token token_type=group id=500 name=ci-reader scopes=read_api access_level=20 expires_at=2030-01-02
+vault write gitlab/roles/group-reader token_type=group id=500 name=ci-reader scopes=read_api access_level=20 token_ttl=48h
+vault write gitlab/token/group-reader
+```
+
+The default type is `project`, including roles created before this field existed.
+Role reads return `token_type`. Partial updates preserve the stored type; send
+`token_type=project` explicitly to change a group role back to project access.
+Unsupported types are rejected. Group creation calls GitLab's
+`POST /groups/:id/access_tokens`; project creation uses
+`POST /projects/:id/access_tokens`.
+
+Both kinds return `name`, `token`, token `id`, `scopes`, `access_level`, and
+`expires_at` when GitLab returns it. Tokens expire natively in GitLab at midnight
+UTC on the requested date. Role issuance derives that date from `token_ttl` and
+the configured maximum TTL is checked when saving roles or creating direct
+tokens. Deleting a Vault role removes the definition; it does not revoke tokens
+already issued from it. Restrict direct `/token` writes and grant consumers only
+the required `/token/<role>` path.
 
 ## Design Principles
 

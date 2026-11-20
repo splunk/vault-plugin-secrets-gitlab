@@ -16,7 +16,7 @@ package gitlabtoken
 
 import gitlab "gitlab.com/gitlab-org/api/client-go"
 
-// PAT stands for Project Access Token.
+// PAT is the common response representation for project and group access tokens.
 type PAT = gitlab.ProjectAccessToken
 
 const (

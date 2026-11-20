@@ -85,7 +85,7 @@ func (ac *mockGitlabClient) Valid() bool {
 //	func (ac *mockGitlabClient) ListProjectAccessToken(id int) ([]*PAT, error) {
 //		return nil, nil
 //	}
-func (ac *mockGitlabClient) CreateProjectAccessToken(_ *BaseTokenStorageEntry, _ *time.Time) (*PAT, error) {
+func (ac *mockGitlabClient) CreateAccessToken(_ *BaseTokenStorageEntry, _ *time.Time) (*PAT, error) {
 	return nil, nil
 }
 
